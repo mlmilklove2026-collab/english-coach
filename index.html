@@ -170,6 +170,7 @@ const PROMPTS = {
 let apiKey = localStorage.getItem('ec_key') || '';
 let transcript = '', transcript2 = '';
 let rec = null, rec2 = null, isRec = false, isRec2 = false;
+let isGeminiLoading = false; // 🔥 防重複點擊鎖
 let chatMsgs = [];
 
 if (apiKey) {
@@ -199,23 +200,33 @@ function updatePrompt() {
   document.getElementById('promptBox').textContent = PROMPTS[document.getElementById('topic').value];
 }
 
+// 🔥 優化後的語音辨識機制
 function startSpeech(onResult, onEnd) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('Speech recognition not supported. Please use Chrome or Edge.');
+    alert('Speech recognition not supported. Please use Chrome or Edge browser.');
     return null;
   }
   const r = new SR();
   r.continuous = false;
-  r.interimResults = true;
+  r.interimResults = false; // 🔥 改為 false，只拿最終完美的辨識結果，防止零碎雜音爆發
   r.lang = 'en-US';
+  
   r.onresult = function(e) {
     let t = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
-    onResult(t);
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        t += e.results[i][0].transcript;
+      }
+    }
+    if (t.trim()) onResult(t);
   };
+  
   r.onend = onEnd;
-  r.onerror = function(e) { console.log('Speech error:', e.error); onEnd(); };
+  r.onerror = function(e) { 
+    console.log('Speech error:', e.error); 
+    onEnd(); 
+  };
   r.start();
   return r;
 }
@@ -228,6 +239,7 @@ function toggleRec() {
   document.getElementById('micLbl').textContent = 'Listening... (tap to stop)';
   document.getElementById('heardBox').textContent = '...';
   document.getElementById('heardBox').classList.remove('empty');
+  
   rec = startSpeech(
     function(t) {
       transcript = t;
@@ -252,40 +264,58 @@ function toggleRec2() {
   isRec2 = true;
   document.getElementById('micBtn2').classList.add('rec');
   document.getElementById('micLbl2').textContent = 'Listening... (tap to stop)';
+  
   rec2 = startSpeech(
-    function(t) { transcript2 = t; document.getElementById('chatInput').value = t; },
+    function(t) { 
+      transcript2 = t; 
+      document.getElementById('chatInput').value = t; 
+    },
     function() {
       isRec2 = false;
       document.getElementById('micBtn2').classList.remove('rec');
       document.getElementById('micLbl2').textContent = 'Tap to speak';
-      if (transcript2.trim()) sendChat();
+      // 🔥 只有在真正有錄到音，且 AI 當前沒有在忙的時候，才送出對話，防止無限重送
+      if (transcript2.trim() && !isGeminiLoading) {
+        sendChat();
+      }
     }
   );
 }
 
 async function callGemini(prompt) {
   if (!apiKey) { alert('Please enter your Gemini API key first.'); return null; }
+  if (isGeminiLoading) return null; // 🔥 如果正在加載，直接擋掉
+  
+  isGeminiLoading = true;
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
-  return data.candidates[0].content.parts[0].text;
+  
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
+    return data.candidates[0].content.parts[0].text;
+  } finally {
+    isGeminiLoading = false; // 🔥 不管成功失敗，結束時一定解鎖
+  }
 }
 
 async function correctMe() {
-  if (!transcript.trim()) return;
+  if (!transcript.trim() || isGeminiLoading) return;
   const btn = document.getElementById('correctBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Analyzing...';
   const area = document.getElementById('resultArea');
   area.innerHTML = '<div class="box-load">Asking Gemini to review your English...</div>';
+  
   try {
     const prompt = 'You are a friendly English teacher. The student said: "' + transcript + '"\n\nReply in EXACTLY this format (keep the labels, one line each):\nCORRECTED: [corrected sentence, or repeat original if perfect]\nERRORS: [briefly what was wrong, or "No errors found." if perfect]\nTIP: [one short tip on pronunciation or word choice]';
     const reply = await callGemini(prompt);
+    if(!reply) return;
+    
     const lines = {};
     reply.split('\n').forEach(function(l) {
       const idx = l.indexOf(':');
@@ -302,32 +332,42 @@ async function correctMe() {
     saveRecord({ ts: Date.now(), type: 'pronunciation', original: transcript, corrected: corrected, tip: tip, hasError: hasError });
   } catch(e) {
     area.innerHTML = '<div style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ' + e.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✏️ Correct my English!';
   }
-  btn.disabled = false;
-  btn.textContent = '✏️ Correct my English!';
 }
 
 async function sendChat() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || isGeminiLoading) return;
+  
   input.value = '';
   document.getElementById('sendBtn').disabled = true;
   const hist = document.getElementById('chatHist');
+  
   const uEl = document.createElement('div');
   uEl.className = 'msg user';
   uEl.textContent = text;
   hist.appendChild(uEl);
   chatMsgs.push({ role: 'user', text: text });
+  
   const aEl = document.createElement('div');
   aEl.className = 'msg ai';
   aEl.textContent = '...';
   hist.appendChild(aEl);
   hist.scrollTop = hist.scrollHeight;
+  
   const history = chatMsgs.map(function(m) { return (m.role === 'user' ? 'Student' : 'Teacher') + ': ' + m.text; }).join('\n');
   const prompt = 'You are a friendly English conversation partner and teacher.\nHave a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.\nIf there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.\nKeep replies to 2-3 sentences. Be encouraging.\n\nConversation so far:\n' + history + '\n\nTeacher:';
+  
   try {
     const reply = await callGemini(prompt);
+    if (!reply) {
+       aEl.textContent = 'Request blocked or failed.';
+       return;
+    }
     chatMsgs.push({ role: 'ai', text: reply });
     const parts = reply.split('CORRECTION:');
     aEl.innerHTML = '<span>' + parts[0].trim() + '</span>';
@@ -336,9 +376,10 @@ async function sendChat() {
     saveRecord({ ts: Date.now(), type: 'conversation', original: text, corrected: corrPart || text, tip: '', hasError: !!corrPart });
   } catch(e) {
     aEl.textContent = 'Error: ' + e.message;
+  } finally {
+    hist.scrollTop = hist.scrollHeight;
+    document.getElementById('sendBtn').disabled = false;
   }
-  hist.scrollTop = hist.scrollHeight;
-  document.getElementById('sendBtn').disabled = false;
 }
 
 function getRecords() { return JSON.parse(localStorage.getItem('ec_records') || '[]'); }
