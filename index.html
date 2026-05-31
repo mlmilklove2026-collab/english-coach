@@ -4,573 +4,758 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>English Coach 🎓</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f8f7f4;color:#1a1a1a;min-height:100vh}
-.app{max-width:640px;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem}
-h1{font-size:22px;font-weight:600;text-align:center}
-.sub{font-size:13px;color:#555;text-align:center;margin-top:4px}
-.card{background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:1rem 1.25rem}
-.lbl{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.tabs{display:flex;gap:6px;background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:5px}
-.tab{flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:#555;transition:.15s}
-.tab.active{background:#f1efe8;color:#1a1a1a;border:1px solid #ccc}
-input[type=text],input[type=password],select{width:100%;padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:13px;background:#f1efe8;color:#1a1a1a;outline:none}
-.row{display:flex;gap:8px;align-items:center}
-.row input{flex:1}
-.btn{padding:9px 16px;background:#f1efe8;border:1px solid #ccc;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:#1a1a1a;transition:.15s}
-.btn:hover:not(:disabled){background:#e8e6df}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-full{width:100%;padding:12px;font-size:14px;margin-top:.5rem}
-.status{font-size:12px;margin-top:6px;color:#999}
-.status.ok{color:#3b6d11}
-.prompt-box{background:#f1efe8;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:14px;line-height:1.6}
-select{margin-bottom:10px}
-.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:1.2rem 0}
-.mic-btn{width:72px;height:72px;border-radius:50%;border:2px solid #ccc;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:30px;transition:.15s;user-select:none}
-.mic-btn:hover{background:#f1efe8}
-.mic-btn.rec{background:#fcebeb;border-color:#e24b4a;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.mic-lbl{font-size:13px;color:#555}
-.heard{background:#f1efe8;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:14px;min-height:52px;line-height:1.6;font-style:italic;color:#1a1a1a}
-.heard.empty{color:#999;font-style:normal}
-.box-blue{background:#e6f1fb;border:1px solid #b5d4f4;border-radius:8px;padding:12px;font-size:13px;color:#0c447c;line-height:1.7;margin-bottom:8px}
-.box-green{background:#eaf3de;border:1px solid #c0dd97;border-radius:8px;padding:12px;font-size:13px;color:#27500a;line-height:1.7}
-.box-load{background:#f1efe8;border-radius:8px;padding:12px;font-size:13px;color:#555;text-align:center}
-.chat-hist{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:4px 0}
-.msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
-.msg.user{align-self:flex-end;background:#f1efe8;border:1px solid #ccc;color:#1a1a1a}
-.msg.ai{align-self:flex-start;background:#e6f1fb;border:1px solid #b5d4f4;color:#0c447c}
-.corr-pill{display:block;margin-top:8px;background:#faece7;border:1px solid #f5c4b3;color:#712b13;border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace}
-.chat-row{display:flex;gap:8px;margin-top:10px}
-.chat-row input{flex:1}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
-.stat-card{background:#f1efe8;border-radius:8px;padding:12px;text-align:center}
-.stat-num{font-size:26px;font-weight:600}
-.stat-lbl{font-size:12px;color:#555;margin-top:2px}
-.record-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
-.rec-item{background:#fff;border:1px solid #e0ddd6;border-radius:8px;padding:12px}
-.rec-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.rec-date{font-size:12px;color:#555}
-.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
-.badge.good{background:#eaf3de;color:#27500a}
-.badge.bad{background:#fcebeb;color:#a32d2d}
-.rec-orig{font-size:13px;color:#555;margin-bottom:4px;font-style:italic}
-.rec-corr{font-size:13px;color:#0c447c;font-weight:500}
-.del-btn{font-size:11px;padding:3px 8px;background:transparent;border:1px solid #e0ddd6;border-radius:20px;cursor:pointer;color:#999}
-.del-btn:hover{background:#fcebeb;color:#a32d2d;border-color:#f7c1c1}
-.empty-state{text-align:center;padding:2rem;color:#999;font-size:14px}
-.filter-row{display:flex;gap:8px;margin-bottom:10px}
-.filter-row select{margin-bottom:0;flex:1}
-.hidden{display:none!important}
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --accent: #4f8ef7;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #4a5568;
+    --radius: 14px;
+    --glow: 0 0 20px rgba(79,142,247,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 24px 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0a0c10 0%, transparent 100%);
+  }
+  header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+  header h1 span { color: var(--accent); }
+  header p { font-size: .8rem; color: var(--text2); margin-top: 4px; }
+
+  /* ── API Key ── */
+  .api-bar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .api-bar input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+    outline: none;
+  }
+  .api-bar input:focus { border-color: var(--accent); }
+  .api-bar button {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 8px; padding: 8px 14px; cursor: pointer;
+    font-size: .8rem; font-family: 'Sora', sans-serif; font-weight: 600;
+    white-space: nowrap;
+  }
+  .api-bar button:hover { opacity: .85; }
+  .api-status { font-size: .7rem; color: var(--text2); padding: 4px 16px 8px; }
+  .api-status.ok { color: var(--green); }
+  .api-status.err { color: var(--red); }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab-btn {
+    flex: 1; padding: 14px 8px; background: none; border: none;
+    color: var(--text2); font-family: 'Sora', sans-serif; font-size: .85rem;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .2s; font-weight: 500;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Panels ── */
+  .panel { display: none; padding: 16px; }
+  .panel.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: .7rem; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+  }
+
+  /* ── Topic Selector ── */
+  .topic-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .topic-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px; color: var(--text2);
+    font-size: .75rem; cursor: pointer; font-family: 'Sora', sans-serif;
+    transition: all .15s;
+  }
+  .topic-btn.active, .topic-btn:hover {
+    background: rgba(79,142,247,.15); border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Prompt box ── */
+  .prompt-box {
+    background: var(--surface2); border-radius: 10px; padding: 12px 14px;
+    font-size: .85rem; line-height: 1.6; color: var(--text2);
+    border-left: 3px solid var(--accent2); margin-bottom: 4px;
+  }
+
+  /* ── Mic Button ── */
+  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 16px 0; }
+  .mic-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 1.8rem;
+    box-shadow: 0 4px 20px rgba(79,142,247,.3);
+    transition: transform .15s, box-shadow .15s;
+    position: relative; overflow: visible;
+  }
+  .mic-btn:hover { transform: scale(1.06); }
+  .mic-btn.recording {
+    background: linear-gradient(135deg, var(--red), #f97316);
+    box-shadow: 0 4px 30px rgba(248,113,113,.5);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .mic-btn.processing {
+    background: linear-gradient(135deg, var(--yellow), #f59e0b);
+    animation: none; cursor: not-allowed;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 4px 30px rgba(248,113,113,.5); transform: scale(1); }
+    50% { box-shadow: 0 4px 45px rgba(248,113,113,.7); transform: scale(1.05); }
+  }
+  .mic-label { font-size: .75rem; color: var(--text2); }
+
+  /* ── Transcript / AI areas ── */
+  .transcript-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; min-height: 60px;
+    font-size: .85rem; line-height: 1.6; color: var(--text2);
+    font-family: 'JetBrains Mono', monospace; white-space: pre-wrap;
+  }
+  .transcript-box.has-text { color: var(--text); }
+
+  .ai-result {
+    background: var(--surface2); border-radius: 10px; padding: 14px;
+    font-size: .85rem; line-height: 1.7; display: none;
+  }
+  .ai-result.visible { display: block; }
+  .ai-result .label {
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .correct { color: var(--green); }
+  .improve { color: var(--yellow); }
+  .tip { color: var(--accent2); }
+  .correct-text { color: var(--green); font-weight: 600; }
+  .tip-text { color: var(--text2); margin-top: 8px; font-size: .8rem; }
+
+  /* ── Correct btn ── */
+  .correct-btn {
+    width: 100%; padding: 12px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; color: #fff; font-size: .9rem;
+    font-family: 'Sora', sans-serif; font-weight: 600; cursor: pointer;
+    margin-top: 8px; transition: opacity .15s;
+  }
+  .correct-btn:hover { opacity: .85; }
+  .correct-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Conversation ── */
+  .chat-box {
+    height: 340px; overflow-y: auto; display: flex; flex-direction: column;
+    gap: 10px; padding: 10px 0; margin-bottom: 10px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .msg {
+    max-width: 82%; padding: 10px 14px; border-radius: 14px;
+    font-size: .85rem; line-height: 1.6; word-break: break-word;
+  }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.ai { align-self: flex-start; background: var(--surface2); border-bottom-left-radius: 4px; }
+  .msg.correction {
+    align-self: flex-start; background: rgba(167,139,250,.1);
+    border: 1px solid rgba(167,139,250,.3); font-size: .8rem;
+    color: var(--text2);
+  }
+  .msg.correction strong { color: var(--accent2); }
+  .chat-input-row { display: flex; gap: 8px; align-items: center; }
+  .chat-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: 'Sora', sans-serif; font-size: .85rem; outline: none;
+    resize: none; height: 44px; line-height: 1.4;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .send-btn {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--accent); border: none; color: #fff;
+    font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .send-btn:hover { opacity: .85; }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .conv-mic-btn {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 1.2rem; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .conv-mic-btn.recording { background: var(--red); border-color: var(--red); animation: pulse 1.2s infinite; }
+
+  /* ── Records ── */
+  .stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .stat-card {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px; text-align: center;
+  }
+  .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .stat-lbl { font-size: .65rem; color: var(--text2); margin-top: 2px; }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filter-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; color: var(--text2);
+    font-size: .72rem; cursor: pointer; font-family: 'Sora', sans-serif;
+    transition: all .15s;
+  }
+  .filter-btn.active { background: rgba(79,142,247,.15); border-color: var(--accent); color: var(--accent); }
+  .clear-btn {
+    margin-left: auto; background: none; border: 1px solid var(--red);
+    border-radius: 20px; padding: 4px 12px; color: var(--red);
+    font-size: .72rem; cursor: pointer; font-family: 'Sora', sans-serif;
+  }
+  .record-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px;
+  }
+  .record-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .record-type {
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; padding: 2px 8px; border-radius: 20px;
+  }
+  .record-type.pronunciation { background: rgba(79,142,247,.15); color: var(--accent); }
+  .record-type.conversation { background: rgba(167,139,250,.15); color: var(--accent2); }
+  .record-time { font-size: .7rem; color: var(--text3); }
+  .record-original { font-size: .8rem; color: var(--text2); margin-bottom: 4px; font-style: italic; }
+  .record-feedback { font-size: .78rem; color: var(--text); line-height: 1.5; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: .85rem; }
+
+  /* ── Loading dots ── */
+  .dots { display: inline-flex; gap: 3px; align-items: center; }
+  .dots span {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--text2);
+    animation: dotpulse 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: .2s; }
+  .dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes dotpulse { 0%,80%,100%{opacity:.2;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* ── Snackbar ── */
+  #snackbar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 18px; font-size: .8rem;
+    color: var(--text); display: none; z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4); white-space: nowrap;
+  }
+  #snackbar.show { display: block; }
+  #snackbar.err { border-color: var(--red); color: var(--red); }
 </style>
 </head>
 <body>
-<div class="app">
-  <div>
-    <h1>🎓 English Coach</h1>
-    <p class="sub">Powered by Google Gemini · Free to use</p>
+
+<header>
+  <h1>🎓 English <span>Coach</span></h1>
+  <p>Powered by Google Gemini · Correct your English in real time</p>
+</header>
+
+<div class="api-bar">
+  <input type="password" id="apiKey" placeholder="Paste your Gemini API key from aistudio.google.com" />
+  <button onclick="saveKey()">Save</button>
+</div>
+<div class="api-status" id="apiStatus">No key saved yet</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('pronunciation',this)">🎤 Pronunciation</button>
+  <button class="tab-btn" onclick="switchTab('conversation',this)">💬 Conversation</button>
+  <button class="tab-btn" onclick="switchTab('records',this)">📊 Records</button>
+</div>
+
+<!-- ════════════════ PRONUNCIATION ════════════════ -->
+<div class="panel active" id="panel-pronunciation">
+  <div class="card">
+    <div class="card-title">Practice Topic</div>
+    <div class="topic-grid" id="topicGrid">
+      <button class="topic-btn active" onclick="selectTopic(this,'Self introduction')">Self introduction</button>
+      <button class="topic-btn" onclick="selectTopic(this,'Talking about work')">Talking about work</button>
+      <button class="topic-btn" onclick="selectTopic(this,'Travel & places')">Travel & places</button>
+      <button class="topic-btn" onclick="selectTopic(this,'Food & restaurants')">Food & restaurants</button>
+      <button class="topic-btn" onclick="selectTopic(this,'Daily routine')">Daily routine</button>
+      <button class="topic-btn" onclick="selectTopic(this,'Free speech')">Free speech</button>
+    </div>
   </div>
 
   <div class="card">
-    <div class="lbl">Gemini API Key</div>
-    <div class="row">
-      <input type="password" id="apiKey" placeholder="AIzaSy..." />
-      <button class="btn" onclick="saveKey()">Save</button>
-    </div>
-    <div class="status" id="keyStatus">Paste your key from aistudio.google.com</div>
+    <div class="card-title">Try saying this</div>
+    <div class="prompt-box" id="promptBox">Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.</div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="setMode('p')" id="tab-p">🎤 Pronunciation</button>
-    <button class="tab" onclick="setMode('c')" id="tab-c">💬 Conversation</button>
-    <button class="tab" onclick="setMode('r')" id="tab-r">📊 Records</button>
+  <div class="mic-wrap">
+    <button class="mic-btn" id="pronMicBtn" onclick="togglePronMic()">🎙️</button>
+    <span class="mic-label" id="pronMicLabel">Tap to speak</span>
   </div>
 
-  <!-- PRONUNCIATION -->
-  <div id="pane-p">
-    <div class="card" style="margin-bottom:1rem">
-      <div class="lbl">Practice topic</div>
-      <select id="topic" onchange="updatePrompt()">
-        <option value="intro">Self introduction</option>
-        <option value="work">Talking about work</option>
-        <option value="travel">Travel & places</option>
-        <option value="food">Food & restaurants</option>
-        <option value="daily">Daily routine</option>
-        <option value="free">Free speech</option>
-      </select>
-      <div class="lbl">Try saying this</div>
-      <div class="prompt-box" id="promptBox">Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.</div>
-    </div>
-    <div class="card" style="margin-bottom:1rem">
-      <div class="mic-wrap">
-        <div class="mic-btn" id="micBtn" onclick="toggleRec()">🎙️</div>
-        <span class="mic-lbl" id="micLbl">Tap to speak</span>
-      </div>
-      <div class="lbl">What I heard</div>
-      <div class="heard empty" id="heardBox">Your speech will appear here...</div>
-    </div>
-    <button class="btn btn-full" id="correctBtn" onclick="correctMe()" disabled>✏️ Correct my English!</button>
-    <div id="resultArea" style="margin-top:1rem"></div>
+  <div class="card">
+    <div class="card-title">What I heard</div>
+    <div class="transcript-box" id="pronTranscript">Your speech will appear here…</div>
   </div>
 
-  <!-- CONVERSATION -->
-  <div id="pane-c" class="hidden">
-    <div class="card">
-      <div class="lbl">Conversation — AI corrects mistakes naturally</div>
-      <div class="chat-hist" id="chatHist">
-        <div class="msg ai">Hi! Let's chat in English. I'll gently correct any mistakes. What would you like to talk about? 😊</div>
-      </div>
-      <div class="chat-row">
-        <input type="text" id="chatInput" placeholder="Type or use mic..." onkeydown="if(event.key==='Enter')sendChat()" />
-        <button class="btn" id="sendBtn" onclick="sendChat()">Send ↗</button>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1rem">
-      <div class="mic-wrap" style="padding:.5rem 0 .25rem">
-        <div class="mic-btn" id="micBtn2" onclick="toggleRec2()">🎙️</div>
-        <span class="mic-lbl" id="micLbl2">Tap to speak</span>
-      </div>
-    </div>
-  </div>
+  <button class="correct-btn" id="correctBtn" onclick="correctPronunciation()" disabled>✏️ Correct my English!</button>
 
-  <!-- RECORDS -->
-  <div id="pane-r" class="hidden">
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Sessions</div></div>
-      <div class="stat-card"><div class="stat-num" id="statErrors">0</div><div class="stat-lbl">Errors found</div></div>
-      <div class="stat-card"><div class="stat-num" id="statPerfect">0</div><div class="stat-lbl">Perfect ✓</div></div>
-    </div>
-    <div class="card">
-      <div class="filter-row">
-        <select id="filterType" onchange="renderRecords()">
-          <option value="all">All types</option>
-          <option value="pronunciation">🎤 Pronunciation</option>
-          <option value="conversation">💬 Conversation</option>
-        </select>
-        <button class="btn" onclick="clearAll()" style="color:#a32d2d;white-space:nowrap">🗑 Clear all</button>
-      </div>
-      <div class="record-list" id="recordList">
-        <div class="empty-state">No records yet.<br>Start practising to see your history!</div>
+  <div class="ai-result" id="pronResult"></div>
+</div>
+
+<!-- ════════════════ CONVERSATION ════════════════ -->
+<div class="panel" id="panel-conversation">
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="chat-box" id="chatBox"></div>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);">
+      <div class="chat-input-row">
+        <button class="conv-mic-btn" id="convMicBtn" onclick="toggleConvMic()" title="Speak">🎙️</button>
+        <textarea class="chat-input" id="chatInput" placeholder="Type or speak in English…" onkeydown="chatKeydown(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">↗</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ════════════════ RECORDS ════════════════ -->
+<div class="panel" id="panel-records">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="statSessions">0</div><div class="stat-lbl">Sessions</div></div>
+    <div class="stat-card"><div class="stat-num" id="statErrors">0</div><div class="stat-lbl">Errors found</div></div>
+    <div class="stat-card"><div class="stat-num" id="statPerfect">0</div><div class="stat-lbl">Perfect ✓</div></div>
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterRecords('all',this)">All types</button>
+    <button class="filter-btn" onclick="filterRecords('pronunciation',this)">🎤 Pronunciation</button>
+    <button class="filter-btn" onclick="filterRecords('conversation',this)">💬 Conversation</button>
+    <button class="clear-btn" onclick="clearRecords()">🗑 Clear all</button>
+  </div>
+  <div id="recordsList"></div>
+</div>
+
+<div id="snackbar"></div>
+
 <script>
-<script>
-const PROMPTS = {
-  intro:"Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.",
-  work:"I work at a company that makes ___. My main job is to ___ and I usually start work at ___.",
-  travel:"I recently visited ___. The most interesting thing I saw was ___. I would recommend it because ___.",
-  food:"My favorite food is ___ because ___. I usually eat it at a ___ restaurant near my home.",
-  daily:"I usually wake up at ___. Then I ___ before going to work. After work I like to ___.",
-  free:"Say anything you want in English. The AI will check your grammar and suggest improvements."
+// ══════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════
+let geminiKey = localStorage.getItem('geminiKey') || '';
+let records = JSON.parse(localStorage.getItem('ecRecords') || '[]');
+let currentTopic = 'Self introduction';
+let recordFilter = 'all';
+
+let pronRecognition = null;
+let convRecognition = null;
+let isPronRecording = false;
+let isConvRecording = false;
+let pronText = '';
+
+const prompts = {
+  'Self introduction': 'Hi, my name is ___ and I\'m learning English. I work as a ___ and I enjoy ___.',
+  'Talking about work': 'I work at a company that makes software. My job is to help customers solve problems.',
+  'Travel & places': 'I love to travel. Last year I visited Japan and it was an amazing experience.',
+  'Food & restaurants': 'My favorite food is sushi. I also enjoy trying new restaurants and cuisines.',
+  'Daily routine': 'Every morning I wake up at 7am, have breakfast, and then go to work.',
+  'Free speech': 'Tell me anything — just speak naturally in English!'
 };
 
-let apiKey = localStorage.getItem('ec_key') || '';
-let transcript = '', transcript2 = '';
-let rec = null, rec2 = null, isRec = false, isRec2 = false;
-let isGeminiLoading = false; 
-let chatMsgs = [];
+// ══════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════
+window.onload = () => {
+  if (geminiKey) {
+    document.getElementById('apiKey').value = geminiKey;
+    document.getElementById('apiStatus').textContent = '✓ Key loaded';
+    document.getElementById('apiStatus').className = 'api-status ok';
+  }
+  renderRecords();
+  initConversation();
+};
 
-if (apiKey) {
-  document.getElementById('apiKey').value = apiKey;
-  document.getElementById('keyStatus').textContent = '✓ Key saved';
-  document.getElementById('keyStatus').className = 'status ok';
-}
-
+// ══════════════════════════════════════════
+//  API Key
+// ══════════════════════════════════════════
 function saveKey() {
   const v = document.getElementById('apiKey').value.trim();
-  if (!v) return;
-  apiKey = v;
-  localStorage.setItem('ec_key', v);
-  document.getElementById('keyStatus').textContent = '✓ Key saved';
-  document.getElementById('keyStatus').className = 'status ok';
+  if (!v) { showSnack('Please paste your API key first', true); return; }
+  geminiKey = v;
+  localStorage.setItem('geminiKey', v);
+  document.getElementById('apiStatus').textContent = '✓ Key saved!';
+  document.getElementById('apiStatus').className = 'api-status ok';
+  showSnack('API key saved ✓');
 }
 
-function setMode(m) {
-  ['p','c','r'].forEach(x => {
-    document.getElementById('pane-'+x).classList.toggle('hidden', x !== m);
-    document.getElementById('tab-'+x).classList.toggle('active', x === m);
-  });
-  if (m === 'r') renderRecords();
+// ══════════════════════════════════════════
+//  Tabs
+// ══════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'records') renderRecords();
 }
 
-function updatePrompt() {
-  document.getElementById('promptBox').textContent = PROMPTS[document.getElementById('topic').value];
+// ══════════════════════════════════════════
+//  Topic
+// ══════════════════════════════════════════
+function selectTopic(btn, topic) {
+  document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTopic = topic;
+  document.getElementById('promptBox').textContent = prompts[topic];
 }
 
-// 🚀 核心修正：完美融合即時打字與防爆流量的語音核心
-function startSpeech(onResult, onEnd) {
+// ══════════════════════════════════════════
+//  Speech Recognition (Web Speech API)
+// ══════════════════════════════════════════
+function buildRecognition(onResult, onEnd) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert('Speech recognition not supported. Please use Chrome or Edge browser.');
-    return null;
-  }
+  if (!SR) { showSnack('Browser does not support speech recognition. Try Chrome or Edge.', true); return null; }
   const r = new SR();
-  r.continuous = true;       // 允許連續說話不中斷
-  r.interimResults = true;   // 開啟即時回傳，讓你一邊講字一邊出來
   r.lang = 'en-US';
-  
-  r.onresult = function(e) {
-    let interimTranscript = '';
-    let finalTranscript = '';
-    
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) {
-        finalTranscript += e.results[i][0].transcript;
-      } else {
-        interimTranscript += e.results[i][0].transcript;
-      }
-    }
-    
-    // 優先把定案的字加上去，如果還沒定案就先顯示即時聽到的字
-    let currentText = finalTranscript || interimTranscript;
-    if (currentText.trim()) {
-      onResult(currentText);
-    }
-  };
-  
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  r.continuous = false;
+  r.onresult = onResult;
   r.onend = onEnd;
-  r.onerror = function(e) { 
-    console.log('Speech error:', e.error); 
-    onEnd(); 
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed') showSnack('Microphone permission denied. Please allow mic access.', true);
+    else if (e.error === 'no-speech') showSnack('No speech detected. Try again.', true);
+    else showSnack('Mic error: ' + e.error, true);
+    onEnd();
   };
-  r.start();
   return r;
 }
 
-function toggleRec() {
-  if (isRec) { if (rec) rec.stop(); return; }
-  transcript = '';
-  isRec = true;
-  document.getElementById('micBtn').classList.add('rec');
-  document.getElementById('micLbl').textContent = 'Listening... (tap to stop)';
-  document.getElementById('heardBox').textContent = '...';
-  document.getElementById('heardBox').classList.remove('empty');
-  
-  rec = startSpeech(
-    function(t) {
-      transcript = t;
-      document.getElementById('heardBox').textContent = t;
-      document.getElementById('correctBtn').disabled = !t.trim();
-    },
-    function() {
-      isRec = false;
-      document.getElementById('micBtn').classList.remove('rec');
-      document.getElementById('micLbl').textContent = 'Tap to speak';
-      if (!transcript.trim()) {
-        document.getElementById('heardBox').textContent = 'Nothing heard — try again.';
-        document.getElementById('heardBox').classList.add('empty');
-      }
-    }
-  );
+// ── Pronunciation mic ──
+function togglePronMic() {
+  if (!isPronRecording) startPronMic(); else stopPronMic();
 }
 
-function toggleRec2() {
-  if (isRec2) { if (rec2) rec2.stop(); return; }
-  transcript2 = '';
-  isRec2 = true;
-  document.getElementById('micBtn2').classList.add('rec');
-  document.getElementById('micLbl2').textContent = 'Listening... (tap to stop)';
-  
-  rec2 = startSpeech(
-    function(t) { 
-      transcript2 = t; 
-      document.getElementById('chatInput').value = t; 
+function startPronMic() {
+  pronRecognition = buildRecognition(
+    (e) => {
+      const t = Array.from(e.results).map(r => r[0].transcript).join(' ');
+      pronText = t;
+      const box = document.getElementById('pronTranscript');
+      box.textContent = t;
+      box.classList.add('has-text');
     },
-    function() {
-      isRec2 = false;
-      document.getElementById('micBtn2').classList.remove('rec');
-      document.getElementById('micLbl2').textContent = 'Tap to speak';
-      // 當使用者「主動按停止麥克風」且有錄到音、AI沒在忙時，才送出對話，避免重複觸發
-      if (transcript2.trim() && !isGeminiLoading) {
-        sendChat();
-      }
+    () => {
+      isPronRecording = false;
+      document.getElementById('pronMicBtn').classList.remove('recording');
+      document.getElementById('pronMicLabel').textContent = 'Tap to speak';
+      document.getElementById('correctBtn').disabled = !pronText.trim();
     }
   );
+  if (!pronRecognition) return;
+  pronRecognition.start();
+  isPronRecording = true;
+  document.getElementById('pronMicBtn').classList.add('recording');
+  document.getElementById('pronMicLabel').textContent = 'Recording… tap to stop';
 }
 
+function stopPronMic() {
+  if (pronRecognition) pronRecognition.stop();
+}
+
+// ── Conversation mic ──
+function toggleConvMic() {
+  if (!isConvRecording) startConvMic(); else stopConvMic();
+}
+
+function startConvMic() {
+  convRecognition = buildRecognition(
+    (e) => {
+      const t = Array.from(e.results).map(r => r[0].transcript).join(' ');
+      document.getElementById('chatInput').value = t;
+    },
+    () => {
+      isConvRecording = false;
+      document.getElementById('convMicBtn').classList.remove('recording');
+      document.getElementById('convMicBtn').textContent = '🎙️';
+    }
+  );
+  if (!convRecognition) return;
+  convRecognition.start();
+  isConvRecording = true;
+  document.getElementById('convMicBtn').classList.add('recording');
+  document.getElementById('convMicBtn').textContent = '⏹';
+}
+
+function stopConvMic() {
+  if (convRecognition) convRecognition.stop();
+}
+
+// ══════════════════════════════════════════
+//  Gemini API call
+// ══════════════════════════════════════════
 async function callGemini(prompt) {
-  if (!apiKey) { alert('Please enter your Gemini API key first.'); return null; }
-  if (isGeminiLoading) return null; 
-  
-  isGeminiLoading = true;
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
-  
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
-    return data.candidates[0].content.parts[0].text;
-  } finally {
-    isGeminiLoading = false; 
+  if (!geminiKey) { showSnack('Please save your Gemini API key first!', true); return null; }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'API error ' + res.status);
   }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
-async function correctMe() {
-  if (!transcript.trim() || isGeminiLoading) return;
+// ══════════════════════════════════════════
+//  Pronunciation correction
+// ══════════════════════════════════════════
+async function correctPronunciation() {
+  if (!pronText.trim()) return;
   const btn = document.getElementById('correctBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ Analyzing...';
-  const area = document.getElementById('resultArea');
-  area.innerHTML = '<div class="box-load">Asking Gemini to review your English...</div>';
-  
+  btn.textContent = 'Analyzing…';
+  const resultBox = document.getElementById('pronResult');
+  resultBox.className = 'ai-result visible';
+  resultBox.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+
+  const prompt = `You are a friendly English teacher. A student said:
+"${pronText}"
+Topic: ${currentTopic}
+
+Reply in this EXACT format (use these exact labels):
+VERDICT: [Perfect! / Minor issues / Needs work]
+CORRECTED: [corrected sentence, or "No correction needed"]
+ISSUES: [brief bullet list of issues, or "None"]
+TIP: [one short practical tip]
+
+Be encouraging. Keep it concise.`;
+
   try {
-    const prompt = 'You are a friendly English teacher. The student said: "' + transcript + '"\n\nReply in EXACTLY this format (keep the labels, one line each):\nCORRECTED: [corrected sentence, or repeat original if perfect]\nERRORS: [briefly what was wrong, or "No errors found." if perfect]\nTIP: [one short tip on pronunciation or word choice]';
     const reply = await callGemini(prompt);
-    if(!reply) return;
-    
-    const lines = {};
-    reply.split('\n').forEach(function(l) {
-      const idx = l.indexOf(':');
-      if (idx > -1) { const k = l.slice(0,idx).trim(); const v = l.slice(idx+1).trim(); if (k) lines[k] = v; }
-    });
-    const corrected = lines['CORRECTED'] || transcript;
-    const errors = lines['ERRORS'] || '';
-    const tip = lines['TIP'] || '';
-    const hasError = !errors.toLowerCase().includes('no error');
-    area.innerHTML =
-      '<div class="box-blue"><div class="lbl" style="color:#185fa5">✏️ Correction</div><strong>' + corrected + '</strong>' +
-      (errors ? '<div style="margin-top:6px;font-size:12px;opacity:.8">' + errors + '</div>' : '') + '</div>' +
-      (tip ? '<div class="box-green"><div class="lbl" style="color:#3b6d11">💡 Tip</div>' + tip + '</div>' : '');
-    saveRecord({ ts: Date.now(), type: 'pronunciation', original: transcript, corrected: corrected, tip: tip, hasError: hasError });
+    resultBox.innerHTML = formatPronResult(reply, pronText);
+    saveRecord('pronunciation', pronText, reply);
   } catch(e) {
-    area.innerHTML = '<div style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ' + e.message + '</div>';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '✏️ Correct my English!';
+    resultBox.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+    showSnack(e.message, true);
   }
+  btn.disabled = false;
+  btn.textContent = '✏️ Correct my English!';
 }
 
-async function sendChat() {
+function formatPronResult(raw, original) {
+  const get = (label) => {
+    const m = raw.match(new RegExp(label + ':\\s*([\\s\\S]*?)(?=\\n[A-Z]+:|$)'));
+    return m ? m[1].trim() : '';
+  };
+  const verdict = get('VERDICT');
+  const corrected = get('CORRECTED');
+  const issues = get('ISSUES');
+  const tip = get('TIP');
+  const isGood = verdict.toLowerCase().includes('perfect') || corrected.toLowerCase().includes('no correction');
+  return `
+    <div class="label ${isGood ? 'correct' : 'improve'}">${isGood ? '✓ VERDICT' : '⚠ VERDICT'}</div>
+    <div>${verdict}</div>
+    ${corrected && !corrected.toLowerCase().includes('no correction') ? `
+      <div class="label correct" style="margin-top:10px">✓ CORRECTED</div>
+      <div class="correct-text">${corrected}</div>` : ''}
+    ${issues && issues !== 'None' ? `
+      <div class="label improve" style="margin-top:10px">⚠ ISSUES</div>
+      <div>${issues}</div>` : ''}
+    ${tip ? `
+      <div class="label tip" style="margin-top:10px">💡 TIP</div>
+      <div class="tip-text">${tip}</div>` : ''}
+  `;
+}
+
+// ══════════════════════════════════════════
+//  Conversation
+// ══════════════════════════════════════════
+let chatHistory = [];
+
+function initConversation() {
+  chatHistory = [];
+  const box = document.getElementById('chatBox');
+  box.innerHTML = '';
+  addMsg('ai', "Hi! Let's chat in English 😊 I'll naturally correct any mistakes as we go. What would you like to talk about?");
+}
+
+function addMsg(role, text) {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = text.replace(/\n/g, '<br>');
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function addLoadingMsg() {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text || isGeminiLoading) return;
-  
+  if (!text) return;
   input.value = '';
-  document.getElementById('sendBtn').disabled = true;
-  const hist = document.getElementById('chatHist');
-  
-  const uEl = document.createElement('div');
-  uEl.className = 'msg user';
-  uEl.textContent = text;
-  hist.appendChild(uEl);
-  chatMsgs.push({ role: 'user', text: text });
-  
-  const aEl = document.createElement('div');
-  aEl.className = 'msg ai';
-  aEl.textContent = '...';
-  hist.appendChild(aEl);
-  hist.scrollTop = hist.scrollHeight;
-  
-  const history = chatMsgs.map(function(m) { return (m.role === 'user' ? 'Student' : 'Teacher') + ': ' + m.text; }).join('\n');
-  const prompt = 'You are a friendly English conversation partner and teacher.\nHave a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.\nIf there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.\nKeep replies to 2-3 sentences. Be encouraging.\n\nConversation so far:\n' + history + '\n\nTeacher:';
-  
+  addMsg('user', text);
+  chatHistory.push({ role: 'user', text });
+
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  const loading = addLoadingMsg();
+
+  const historyStr = chatHistory.slice(-8).map(m => `${m.role === 'user' ? 'Student' : 'Teacher'}: ${m.text}`).join('\n');
+  const prompt = `You are a friendly English conversation partner and teacher.
+
+Conversation so far:
+${historyStr}
+
+Your tasks:
+1. If the student made grammar or vocabulary mistakes, gently correct them in a short note starting with "📝 Quick correction:" — but ONLY if there are real mistakes. Keep it brief.
+2. Then respond naturally and engagingly to keep the conversation going.
+3. Ask a follow-up question to encourage more speaking.
+
+Reply format:
+[If correction needed: "📝 Quick correction: ..."]
+[Your natural response + question]
+
+Be warm, encouraging, and concise. Max 3 sentences per section.`;
+
   try {
     const reply = await callGemini(prompt);
-    if (!reply) {
-       aEl.textContent = 'Request blocked or failed.';
-       return;
-    }
-    chatMsgs.push({ role: 'ai', text: reply });
-    const parts = reply.split('CORRECTION:');
-    aEl.innerHTML = '<span>' + parts[0].trim() + '</span>';
-    const corrPart = parts[1] ? parts[1].trim() : '';
-    if (corrPart) { const c = document.createElement('span'); c.className = 'corr-pill'; c.textContent = '📝 ' + corrPart; aEl.appendChild(c); }
-    saveRecord({ ts: Date.now(), type: 'conversation', original: text, corrected: corrPart || text, tip: '', hasError: !!corrPart });
-  } catch(e) {
-    aEl.textContent = 'Error: ' + e.message;
-  } finally {
-    hist.scrollTop = hist.scrollHeight;
-    document.getElementById('sendBtn').disabled = false;
-  }
-}
-
-function getRecords() { return JSON.parse(localStorage.getItem('ec_records') || '[]'); }
-function saveRecord(r) {
-  const recs = getRecords();
-  recs.unshift(r);
-  localStorage.setItem('ec_records', JSON.stringify(recs.slice(0, 200)));
-}
-function clearAll() {
-  if (confirm('Clear all learning records?')) { localStorage.removeItem('ec_records'); renderRecords(); }
-}
-function renderRecords() {
-  const recs = getRecords();
-  const filter = document.getElementById('filterType').value;
-  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
-  document.getElementById('statTotal').textContent = recs.length;
-  document.getElementById('statErrors').textContent = recs.filter(function(r) { return r.hasError; }).length;
-  document.getElementById('statPerfect').textContent = recs.filter(function(r) { return !r.hasError; }).length;
-  const list = document.getElementById('recordList');
-  if (!filtered.length) { list.innerHTML = '<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
-  list.innerHTML = filtered.map(function(r, i) {
-    const d = new Date(r.ts).toLocaleString('zh-TW', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-    return '<div class="rec-item">' +
-      '<div class="rec-top"><span class="badge ' + (r.hasError ? 'bad' : 'good') + '">' + (r.type === 'pronunciation' ? '🎤' : '💬') + ' ' + (r.hasError ? 'Had errors' : 'Perfect') + '</span>' +
-      '<div style="display:flex;gap:8px;align-items:center"><span class="rec-date">' + d + '</span><button class="del-btn" onclick="delRecord(' + i + ')">✕</button></div></div>' +
-      '<div class="rec-orig">You: "' + r.original + '"</div>' +
-      (r.corrected && r.corrected !== r.original ? '<div class="rec-corr">✏️ ' + r.corrected + '</div>' : '') +
-      (r.tip ? '<div style="font-size:12px;color:#3b6d11;margin-top:4px">💡 ' + r.tip + '</div>' : '') +
-      '</div>';
-  }).join('');
-}
-function delRecord(idx) {
-  const filter = document.getElementById('filterType').value;
-  const recs = getRecords();
-  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
-  const target = filtered[idx];
-  const allIdx = recs.findIndex(function(r) { return r.ts === target.ts && r.original === target.original; });
-  if (allIdx > -1) { recs.splice(allIdx, 1); localStorage.setItem('ec_records', JSON.stringify(recs)); renderRecords(); }
-}
-</script>
+    loading.remove();
+    if (reply.includes('📝 Quick correction:')) {
+      const parts = reply.split(/📝 Quick correction:/i);
+      const correctionPart = parts[1]?.split('\n')[0]?.trim();
+      const responsePart = reply.replace(/📝 Quick correction:[^\n]*/i, '').trim();
+      if (correctionPart) {
+        addMsg('correction', '<strong>📝 Quick correction:</strong> ' + correctionPart);
+        saveRecord('conversation', text, '📝 ' + correctionPart);
       }
+      if (responsePart) {
+        const aiMsg = addMsg('ai', responsePart);
+        chatHistory.push({ role: 'ai', text: responsePart });
+      }
+    } else {
+      addMsg('ai', reply);
+      chatHistory.push({ role: 'ai', text: reply });
     }
-  );
-}
-
-async function callGemini(prompt) {
-  if (!apiKey) { alert('Please enter your Gemini API key first.'); return null; }
-  if (isGeminiLoading) return null; // 🔥 如果正在加載，直接擋掉
-  
-  isGeminiLoading = true;
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
-  
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
-    return data.candidates[0].content.parts[0].text;
-  } finally {
-    isGeminiLoading = false; // 🔥 不管成功失敗，結束時一定解鎖
-  }
-}
-
-async function correctMe() {
-  if (!transcript.trim() || isGeminiLoading) return;
-  const btn = document.getElementById('correctBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Analyzing...';
-  const area = document.getElementById('resultArea');
-  area.innerHTML = '<div class="box-load">Asking Gemini to review your English...</div>';
-  
-  try {
-    const prompt = 'You are a friendly English teacher. The student said: "' + transcript + '"\n\nReply in EXACTLY this format (keep the labels, one line each):\nCORRECTED: [corrected sentence, or repeat original if perfect]\nERRORS: [briefly what was wrong, or "No errors found." if perfect]\nTIP: [one short tip on pronunciation or word choice]';
-    const reply = await callGemini(prompt);
-    if(!reply) return;
-    
-    const lines = {};
-    reply.split('\n').forEach(function(l) {
-      const idx = l.indexOf(':');
-      if (idx > -1) { const k = l.slice(0,idx).trim(); const v = l.slice(idx+1).trim(); if (k) lines[k] = v; }
-    });
-    const corrected = lines['CORRECTED'] || transcript;
-    const errors = lines['ERRORS'] || '';
-    const tip = lines['TIP'] || '';
-    const hasError = !errors.toLowerCase().includes('no error');
-    area.innerHTML =
-      '<div class="box-blue"><div class="lbl" style="color:#185fa5">✏️ Correction</div><strong>' + corrected + '</strong>' +
-      (errors ? '<div style="margin-top:6px;font-size:12px;opacity:.8">' + errors + '</div>' : '') + '</div>' +
-      (tip ? '<div class="box-green"><div class="lbl" style="color:#3b6d11">💡 Tip</div>' + tip + '</div>' : '');
-    saveRecord({ ts: Date.now(), type: 'pronunciation', original: transcript, corrected: corrected, tip: tip, hasError: hasError });
   } catch(e) {
-    area.innerHTML = '<div style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ' + e.message + '</div>';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '✏️ Correct my English!';
+    loading.remove();
+    addMsg('ai', `⚠️ Error: ${e.message}`);
+    showSnack(e.message, true);
   }
+  sendBtn.disabled = false;
 }
 
-async function sendChat() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || isGeminiLoading) return;
-  
-  input.value = '';
-  document.getElementById('sendBtn').disabled = true;
-  const hist = document.getElementById('chatHist');
-  
-  const uEl = document.createElement('div');
-  uEl.className = 'msg user';
-  uEl.textContent = text;
-  hist.appendChild(uEl);
-  chatMsgs.push({ role: 'user', text: text });
-  
-  const aEl = document.createElement('div');
-  aEl.className = 'msg ai';
-  aEl.textContent = '...';
-  hist.appendChild(aEl);
-  hist.scrollTop = hist.scrollHeight;
-  
-  const history = chatMsgs.map(function(m) { return (m.role === 'user' ? 'Student' : 'Teacher') + ': ' + m.text; }).join('\n');
-  const prompt = 'You are a friendly English conversation partner and teacher.\nHave a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.\nIf there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.\nKeep replies to 2-3 sentences. Be encouraging.\n\nConversation so far:\n' + history + '\n\nTeacher:';
-  
-  try {
-    const reply = await callGemini(prompt);
-    if (!reply) {
-       aEl.textContent = 'Request blocked or failed.';
-       return;
-    }
-    chatMsgs.push({ role: 'ai', text: reply });
-    const parts = reply.split('CORRECTION:');
-    aEl.innerHTML = '<span>' + parts[0].trim() + '</span>';
-    const corrPart = parts[1] ? parts[1].trim() : '';
-    if (corrPart) { const c = document.createElement('span'); c.className = 'corr-pill'; c.textContent = '📝 ' + corrPart; aEl.appendChild(c); }
-    saveRecord({ ts: Date.now(), type: 'conversation', original: text, corrected: corrPart || text, tip: '', hasError: !!corrPart });
-  } catch(e) {
-    aEl.textContent = 'Error: ' + e.message;
-  } finally {
-    hist.scrollTop = hist.scrollHeight;
-    document.getElementById('sendBtn').disabled = false;
-  }
+// ══════════════════════════════════════════
+//  Records
+// ══════════════════════════════════════════
+function saveRecord(type, original, feedback) {
+  records.unshift({ type, original, feedback, time: Date.now() });
+  if (records.length > 200) records = records.slice(0, 200);
+  localStorage.setItem('ecRecords', JSON.stringify(records));
 }
 
-function getRecords() { return JSON.parse(localStorage.getItem('ec_records') || '[]'); }
-function saveRecord(r) {
-  const recs = getRecords();
-  recs.unshift(r);
-  localStorage.setItem('ec_records', JSON.stringify(recs.slice(0, 200)));
-}
-function clearAll() {
-  if (confirm('Clear all learning records?')) { localStorage.removeItem('ec_records'); renderRecords(); }
-}
 function renderRecords() {
-  const recs = getRecords();
-  const filter = document.getElementById('filterType').value;
-  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
-  document.getElementById('statTotal').textContent = recs.length;
-  document.getElementById('statErrors').textContent = recs.filter(function(r) { return r.hasError; }).length;
-  document.getElementById('statPerfect').textContent = recs.filter(function(r) { return !r.hasError; }).length;
-  const list = document.getElementById('recordList');
+  const filtered = recordFilter === 'all' ? records : records.filter(r => r.type === recordFilter);
+  const sessions = records.length;
+  const errors = records.filter(r => !r.feedback.toLowerCase().includes('perfect') && !r.feedback.includes('No correction needed')).length;
+  const perfect = records.filter(r => r.feedback.toLowerCase().includes('perfect') || r.feedback.includes('No correction needed')).length;
+  document.getElementById('statSessions').textContent = sessions;
+  document.getElementById('statErrors').textContent = errors;
+  document.getElementById('statPerfect').textContent = perfect;
+
+  const list = document.getElementById('recordsList');
   if (!filtered.length) { list.innerHTML = '<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
-  list.innerHTML = filtered.map(function(r, i) {
-    const d = new Date(r.ts).toLocaleString('zh-TW', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-    return '<div class="rec-item">' +
-      '<div class="rec-top"><span class="badge ' + (r.hasError ? 'bad' : 'good') + '">' + (r.type === 'pronunciation' ? '🎤' : '💬') + ' ' + (r.hasError ? 'Had errors' : 'Perfect') + '</span>' +
-      '<div style="display:flex;gap:8px;align-items:center"><span class="rec-date">' + d + '</span><button class="del-btn" onclick="delRecord(' + i + ')">✕</button></div></div>' +
-      '<div class="rec-orig">You: "' + r.original + '"</div>' +
-      (r.corrected && r.corrected !== r.original ? '<div class="rec-corr">✏️ ' + r.corrected + '</div>' : '') +
-      (r.tip ? '<div style="font-size:12px;color:#3b6d11;margin-top:4px">💡 ' + r.tip + '</div>' : '') +
-      '</div>';
-  }).join('');
+
+  list.innerHTML = filtered.map(r => `
+    <div class="record-item">
+      <div class="record-meta">
+        <span class="record-type ${r.type}">${r.type === 'pronunciation' ? '🎤 Pronunciation' : '💬 Conversation'}</span>
+        <span class="record-time">${timeAgo(r.time)}</span>
+      </div>
+      <div class="record-original">"${r.original}"</div>
+      <div class="record-feedback">${r.feedback.substring(0,200)}${r.feedback.length > 200 ? '…' : ''}</div>
+    </div>`).join('');
 }
-function delRecord(idx) {
-  const filter = document.getElementById('filterType').value;
-  const recs = getRecords();
-  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
-  const target = filtered[idx];
-  const allIdx = recs.findIndex(function(r) { return r.ts === target.ts && r.original === target.original; });
-  if (allIdx > -1) { recs.splice(allIdx, 1); localStorage.setItem('ec_records', JSON.stringify(recs)); renderRecords(); }
+
+function filterRecords(f, btn) {
+  recordFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRecords();
+}
+
+function clearRecords() {
+  if (!confirm('Clear all records?')) return;
+  records = [];
+  localStorage.removeItem('ecRecords');
+  renderRecords();
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+// ══════════════════════════════════════════
+//  Snackbar
+// ══════════════════════════════════════════
+let snackTimer;
+function showSnack(msg, isErr = false) {
+  const s = document.getElementById('snackbar');
+  s.textContent = msg;
+  s.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => s.className = '', 3000);
 }
 </script>
 </body>
