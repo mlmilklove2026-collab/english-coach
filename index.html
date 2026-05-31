@@ -158,6 +158,7 @@ select{margin-bottom:10px}
 </div>
 
 <script>
+<script>
 const PROMPTS = {
   intro:"Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.",
   work:"I work at a company that makes ___. My main job is to ___ and I usually start work at ___.",
@@ -170,7 +171,7 @@ const PROMPTS = {
 let apiKey = localStorage.getItem('ec_key') || '';
 let transcript = '', transcript2 = '';
 let rec = null, rec2 = null, isRec = false, isRec2 = false;
-let isGeminiLoading = false; // 🔥 防重複點擊鎖
+let isGeminiLoading = false; 
 let chatMsgs = [];
 
 if (apiKey) {
@@ -200,7 +201,7 @@ function updatePrompt() {
   document.getElementById('promptBox').textContent = PROMPTS[document.getElementById('topic').value];
 }
 
-// 🔥 優化後的語音辨識機制
+// 🚀 核心修正：完美融合即時打字與防爆流量的語音核心
 function startSpeech(onResult, onEnd) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -208,18 +209,27 @@ function startSpeech(onResult, onEnd) {
     return null;
   }
   const r = new SR();
-  r.continuous = false;
-  r.interimResults = false; // 🔥 改為 false，只拿最終完美的辨識結果，防止零碎雜音爆發
+  r.continuous = true;       // 允許連續說話不中斷
+  r.interimResults = true;   // 開啟即時回傳，讓你一邊講字一邊出來
   r.lang = 'en-US';
   
   r.onresult = function(e) {
-    let t = '';
+    let interimTranscript = '';
+    let finalTranscript = '';
+    
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) {
-        t += e.results[i][0].transcript;
+        finalTranscript += e.results[i][0].transcript;
+      } else {
+        interimTranscript += e.results[i][0].transcript;
       }
     }
-    if (t.trim()) onResult(t);
+    
+    // 優先把定案的字加上去，如果還沒定案就先顯示即時聽到的字
+    let currentText = finalTranscript || interimTranscript;
+    if (currentText.trim()) {
+      onResult(currentText);
+    }
   };
   
   r.onend = onEnd;
@@ -274,9 +284,152 @@ function toggleRec2() {
       isRec2 = false;
       document.getElementById('micBtn2').classList.remove('rec');
       document.getElementById('micLbl2').textContent = 'Tap to speak';
-      // 🔥 只有在真正有錄到音，且 AI 當前沒有在忙的時候，才送出對話，防止無限重送
+      // 當使用者「主動按停止麥克風」且有錄到音、AI沒在忙時，才送出對話，避免重複觸發
       if (transcript2.trim() && !isGeminiLoading) {
         sendChat();
+      }
+    }
+  );
+}
+
+async function callGemini(prompt) {
+  if (!apiKey) { alert('Please enter your Gemini API key first.'); return null; }
+  if (isGeminiLoading) return null; 
+  
+  isGeminiLoading = true;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+  
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
+    return data.candidates[0].content.parts[0].text;
+  } finally {
+    isGeminiLoading = false; 
+  }
+}
+
+async function correctMe() {
+  if (!transcript.trim() || isGeminiLoading) return;
+  const btn = document.getElementById('correctBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+  const area = document.getElementById('resultArea');
+  area.innerHTML = '<div class="box-load">Asking Gemini to review your English...</div>';
+  
+  try {
+    const prompt = 'You are a friendly English teacher. The student said: "' + transcript + '"\n\nReply in EXACTLY this format (keep the labels, one line each):\nCORRECTED: [corrected sentence, or repeat original if perfect]\nERRORS: [briefly what was wrong, or "No errors found." if perfect]\nTIP: [one short tip on pronunciation or word choice]';
+    const reply = await callGemini(prompt);
+    if(!reply) return;
+    
+    const lines = {};
+    reply.split('\n').forEach(function(l) {
+      const idx = l.indexOf(':');
+      if (idx > -1) { const k = l.slice(0,idx).trim(); const v = l.slice(idx+1).trim(); if (k) lines[k] = v; }
+    });
+    const corrected = lines['CORRECTED'] || transcript;
+    const errors = lines['ERRORS'] || '';
+    const tip = lines['TIP'] || '';
+    const hasError = !errors.toLowerCase().includes('no error');
+    area.innerHTML =
+      '<div class="box-blue"><div class="lbl" style="color:#185fa5">✏️ Correction</div><strong>' + corrected + '</strong>' +
+      (errors ? '<div style="margin-top:6px;font-size:12px;opacity:.8">' + errors + '</div>' : '') + '</div>' +
+      (tip ? '<div class="box-green"><div class="lbl" style="color:#3b6d11">💡 Tip</div>' + tip + '</div>' : '');
+    saveRecord({ ts: Date.now(), type: 'pronunciation', original: transcript, corrected: corrected, tip: tip, hasError: hasError });
+  } catch(e) {
+    area.innerHTML = '<div style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ' + e.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✏️ Correct my English!';
+  }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isGeminiLoading) return;
+  
+  input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+  const hist = document.getElementById('chatHist');
+  
+  const uEl = document.createElement('div');
+  uEl.className = 'msg user';
+  uEl.textContent = text;
+  hist.appendChild(uEl);
+  chatMsgs.push({ role: 'user', text: text });
+  
+  const aEl = document.createElement('div');
+  aEl.className = 'msg ai';
+  aEl.textContent = '...';
+  hist.appendChild(aEl);
+  hist.scrollTop = hist.scrollHeight;
+  
+  const history = chatMsgs.map(function(m) { return (m.role === 'user' ? 'Student' : 'Teacher') + ': ' + m.text; }).join('\n');
+  const prompt = 'You are a friendly English conversation partner and teacher.\nHave a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.\nIf there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.\nKeep replies to 2-3 sentences. Be encouraging.\n\nConversation so far:\n' + history + '\n\nTeacher:';
+  
+  try {
+    const reply = await callGemini(prompt);
+    if (!reply) {
+       aEl.textContent = 'Request blocked or failed.';
+       return;
+    }
+    chatMsgs.push({ role: 'ai', text: reply });
+    const parts = reply.split('CORRECTION:');
+    aEl.innerHTML = '<span>' + parts[0].trim() + '</span>';
+    const corrPart = parts[1] ? parts[1].trim() : '';
+    if (corrPart) { const c = document.createElement('span'); c.className = 'corr-pill'; c.textContent = '📝 ' + corrPart; aEl.appendChild(c); }
+    saveRecord({ ts: Date.now(), type: 'conversation', original: text, corrected: corrPart || text, tip: '', hasError: !!corrPart });
+  } catch(e) {
+    aEl.textContent = 'Error: ' + e.message;
+  } finally {
+    hist.scrollTop = hist.scrollHeight;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function getRecords() { return JSON.parse(localStorage.getItem('ec_records') || '[]'); }
+function saveRecord(r) {
+  const recs = getRecords();
+  recs.unshift(r);
+  localStorage.setItem('ec_records', JSON.stringify(recs.slice(0, 200)));
+}
+function clearAll() {
+  if (confirm('Clear all learning records?')) { localStorage.removeItem('ec_records'); renderRecords(); }
+}
+function renderRecords() {
+  const recs = getRecords();
+  const filter = document.getElementById('filterType').value;
+  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
+  document.getElementById('statTotal').textContent = recs.length;
+  document.getElementById('statErrors').textContent = recs.filter(function(r) { return r.hasError; }).length;
+  document.getElementById('statPerfect').textContent = recs.filter(function(r) { return !r.hasError; }).length;
+  const list = document.getElementById('recordList');
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
+  list.innerHTML = filtered.map(function(r, i) {
+    const d = new Date(r.ts).toLocaleString('zh-TW', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    return '<div class="rec-item">' +
+      '<div class="rec-top"><span class="badge ' + (r.hasError ? 'bad' : 'good') + '">' + (r.type === 'pronunciation' ? '🎤' : '💬') + ' ' + (r.hasError ? 'Had errors' : 'Perfect') + '</span>' +
+      '<div style="display:flex;gap:8px;align-items:center"><span class="rec-date">' + d + '</span><button class="del-btn" onclick="delRecord(' + i + ')">✕</button></div></div>' +
+      '<div class="rec-orig">You: "' + r.original + '"</div>' +
+      (r.corrected && r.corrected !== r.original ? '<div class="rec-corr">✏️ ' + r.corrected + '</div>' : '') +
+      (r.tip ? '<div style="font-size:12px;color:#3b6d11;margin-top:4px">💡 ' + r.tip + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+function delRecord(idx) {
+  const filter = document.getElementById('filterType').value;
+  const recs = getRecords();
+  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
+  const target = filtered[idx];
+  const allIdx = recs.findIndex(function(r) { return r.ts === target.ts && r.original === target.original; });
+  if (allIdx > -1) { recs.splice(allIdx, 1); localStorage.setItem('ec_records', JSON.stringify(recs)); renderRecords(); }
+}
+</script>
       }
     }
   );
