@@ -38,12 +38,14 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
 @keyframes pulse{0%,100%{box-shadow:0 4px 30px rgba(248,113,113,.5);transform:scale(1)}50%{box-shadow:0 4px 45px rgba(248,113,113,.7);transform:scale(1.05)}}
 .mic-label{font-size:.75rem;color:var(--text2)}
 .mic-hint{font-size:.68rem;color:var(--text3);text-align:center}
+.live-text{background:var(--surface2);border-radius:8px;padding:8px 12px;font-size:.8rem;color:var(--accent2);min-height:32px;font-style:italic;text-align:center;margin-top:-4px;display:none}
+.live-text.active{display:block}
 .transcript-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;min-height:60px;font-size:.85rem;line-height:1.6;color:var(--text2);font-family:'JetBrains Mono',monospace;white-space:pre-wrap}
 .transcript-box.has-text{color:var(--text)}
 .ai-result{background:var(--surface2);border-radius:10px;padding:14px;font-size:.85rem;line-height:1.7;display:none;margin-top:10px}
 .ai-result.visible{display:block}
-.ai-result .label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.correct{color:var(--green)}.improve{color:var(--yellow)}.tip-c{color:var(--accent2)}
+.ai-result .lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.c-green{color:var(--green)}.c-yellow{color:var(--yellow)}.c-purple{color:var(--accent2)}
 .correct-text{color:var(--green);font-weight:600}
 .tip-text{color:var(--text2);margin-top:8px;font-size:.8rem}
 .correct-btn{width:100%;padding:12px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-size:.9rem;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .15s}
@@ -61,7 +63,6 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
 .send-btn:disabled{opacity:.4;cursor:not-allowed}
 .conv-mic-btn{width:44px;height:44px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .conv-mic-btn.recording{background:var(--red);border-color:var(--red);animation:pulse 1.2s infinite}
-.conv-mic-btn.processing{background:var(--yellow);border-color:var(--yellow);cursor:not-allowed}
 .stats-row{display:flex;gap:8px;margin-bottom:12px}
 .stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center}
 .stat-num{font-size:1.5rem;font-weight:700;color:var(--accent)}
@@ -92,7 +93,7 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
 <body>
 <header>
   <h1>🎓 English <span>Coach</span></h1>
-  <p>Powered by Google Gemini · Safari compatible ✓</p>
+  <p>Powered by Google Gemini · Pure text · Safari ✓</p>
 </header>
 <div class="api-bar">
   <input type="password" id="apiKey" placeholder="Paste your Gemini API key from aistudio.google.com" />
@@ -125,12 +126,14 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
   <div class="mic-wrap">
     <button class="mic-btn" id="pronMicBtn" onclick="togglePronMic()">🎙️</button>
     <span class="mic-label" id="pronMicLabel">Tap to speak</span>
-    <span class="mic-hint">Tap once to start · tap again to stop & analyze</span>
+    <span class="mic-hint">Tap to start · tap again to stop</span>
   </div>
+  <div class="live-text" id="pronLive">…</div>
   <div class="card">
     <div class="card-title">What I heard</div>
     <div class="transcript-box" id="pronTranscript">Your speech will appear here…</div>
   </div>
+  <button class="correct-btn" id="correctBtn" onclick="correctPronunciation()" disabled>✏️ Correct my English!</button>
   <div class="ai-result" id="pronResult"></div>
 </div>
 
@@ -139,8 +142,9 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
   <div class="card" style="padding:0;overflow:hidden;">
     <div class="chat-box" id="chatBox"></div>
     <div style="padding:10px 12px;border-top:1px solid var(--border);">
+      <div class="live-text" id="convLive" style="margin-bottom:6px">…</div>
       <div class="chat-input-row">
-        <button class="conv-mic-btn" id="convMicBtn" onclick="toggleConvMic()" title="Speak">🎙️</button>
+        <button class="conv-mic-btn" id="convMicBtn" onclick="toggleConvMic()">🎙️</button>
         <textarea class="chat-input" id="chatInput" placeholder="Type or speak in English…" onkeydown="chatKeydown(event)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="sendMessage()">↗</button>
       </div>
@@ -171,10 +175,12 @@ let geminiKey = localStorage.getItem('geminiKey') || '';
 let records = JSON.parse(localStorage.getItem('ecRecords') || '[]');
 let currentTopic = 'Self introduction';
 let recordFilter = 'all';
-let isGeminiLoading = false;
-let pronMediaRecorder = null, pronChunks = [], isPronRecording = false;
-let convMediaRecorder = null, convChunks = [], isConvRecording = false;
+let isGeminiLoading = false;  // 全域流量鎖：同一時間只允許一個 API 請求
 let chatHistory = [];
+
+// Speech Recognition instances
+let pronRecog = null, isPronRecording = false, pronFinalText = '';
+let convRecog = null, isConvRecording = false;
 
 const prompts = {
   'Self introduction': "Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.",
@@ -220,98 +226,119 @@ function selectTopic(btn, topic) {
   document.getElementById('promptBox').textContent = prompts[topic];
 }
 
-// ── MediaRecorder (Safari uses audio/mp4, Chrome uses audio/webm) ──
-async function getStream() {
-  try {
-    return await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch(e) {
-    showSnack('Mic access denied. Please allow microphone in Safari Settings > Websites > Microphone.', true);
+// ── Speech Recognition builder ──
+// 策略：用 webkitSpeechRecognition 做前端即時轉文字，
+// 停止後只把純文字字串送給 Gemini，完全不傳任何音檔。
+// 這樣每次 API 請求只有幾十個 token，比音檔省 1000 倍。
+function buildRecog(onInterim, onFinal, onEnd) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showSnack('Speech recognition not supported. Please use Chrome or Safari 14.1+.', true);
     return null;
   }
-}
+  const r = new SR();
+  r.lang = 'en-US';
+  r.continuous = true;
+  r.interimResults = true;
 
-function getBestMimeType() {
-  const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'];
-  for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
-  return '';
-}
+  let accumulated = '';
 
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-// ── Pronunciation ──
-async function togglePronMic() {
-  if (isPronRecording) { stopPronMic(); } else { await startPronMic(); }
-}
-
-async function startPronMic() {
-  if (isGeminiLoading) { showSnack('AI is analyzing, please wait.', true); return; }
-  const stream = await getStream();
-  if (!stream) return;
-  pronChunks = [];
-  const mime = getBestMimeType();
-  pronMediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-  pronMediaRecorder.ondataavailable = e => { if (e.data.size > 0) pronChunks.push(e.data); };
-  pronMediaRecorder.onstop = async () => {
-    stream.getTracks().forEach(t => t.stop());
-    const blob = new Blob(pronChunks, { type: pronMediaRecorder.mimeType || 'audio/mp4' });
-    await processPronAudio(blob);
+  r.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) { accumulated += t + ' '; }
+      else { interim = t; }
+    }
+    onInterim((accumulated + interim).trim());
   };
-  pronMediaRecorder.start();
-  isPronRecording = true;
-  document.getElementById('pronMicBtn').classList.add('recording');
-  document.getElementById('pronMicLabel').textContent = 'Recording… tap to stop';
+
+  r.onend = () => { onFinal(accumulated.trim()); onEnd(); };
+
+  r.onerror = e => {
+    if (e.error === 'not-allowed') showSnack('Mic permission denied. Allow mic in Safari Settings.', true);
+    else if (e.error !== 'no-speech') showSnack('Mic error: ' + e.error, true);
+    onFinal(accumulated.trim());
+    onEnd();
+  };
+
+  return r;
+}
+
+// ── Pronunciation mic ──
+function togglePronMic() {
+  if (isPronRecording) { stopPronMic(); } else { startPronMic(); }
+}
+
+function startPronMic() {
+  if (isGeminiLoading) { showSnack('AI is analyzing, please wait.', true); return; }
+  pronFinalText = '';
   document.getElementById('pronTranscript').textContent = 'Listening…';
   document.getElementById('pronTranscript').classList.remove('has-text');
   document.getElementById('pronResult').className = 'ai-result';
+  document.getElementById('correctBtn').disabled = true;
+  document.getElementById('pronLive').className = 'live-text active';
+
+  pronRecog = buildRecog(
+    interim => { document.getElementById('pronLive').textContent = interim || '…'; },
+    final   => { pronFinalText = final; },
+    () => {
+      isPronRecording = false;
+      document.getElementById('pronMicBtn').classList.remove('recording');
+      document.getElementById('pronMicLabel').textContent = 'Tap to speak';
+      document.getElementById('pronLive').className = 'live-text';
+      if (pronFinalText) {
+        const box = document.getElementById('pronTranscript');
+        box.textContent = pronFinalText;
+        box.classList.add('has-text');
+        document.getElementById('correctBtn').disabled = false;
+      } else {
+        document.getElementById('pronTranscript').textContent = 'Nothing heard — try again.';
+      }
+    }
+  );
+  if (!pronRecog) return;
+  pronRecog.start();
+  isPronRecording = true;
+  document.getElementById('pronMicBtn').classList.add('recording');
+  document.getElementById('pronMicLabel').textContent = 'Recording… tap to stop';
 }
 
 function stopPronMic() {
-  if (!pronMediaRecorder || !isPronRecording) return;
-  pronMediaRecorder.stop();
-  isPronRecording = false;
-  document.getElementById('pronMicBtn').classList.remove('recording');
-  document.getElementById('pronMicBtn').classList.add('processing');
-  document.getElementById('pronMicLabel').textContent = 'Analyzing with Gemini…';
+  if (pronRecog) pronRecog.stop();
 }
 
-async function processPronAudio(blob) {
-  const base64 = await blobToBase64(blob);
-  const mime = blob.type || 'audio/mp4';
-  const prompt = `You are a friendly English teacher. Listen to this audio of an English learner.
-Topic: ${currentTopic}
-Reference sentence: "${prompts[currentTopic]}"
+// ── Pronunciation correction (pure text → Gemini) ──
+async function correctPronunciation() {
+  if (!pronFinalText.trim() || isGeminiLoading) return;
+  const btn = document.getElementById('correctBtn');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  const box = document.getElementById('pronResult');
+  box.className = 'ai-result visible';
+  box.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
 
-Reply in EXACTLY this format (one item per line):
-HEARD: [transcribe what they said]
+  const prompt = `You are a friendly English teacher. A student said:
+"${pronFinalText}"
+Topic: ${currentTopic}
+
+Reply in EXACTLY this format (one per line):
 VERDICT: [Perfect! / Minor issues / Needs work]
 CORRECTED: [corrected sentence, or "No correction needed"]
 ISSUES: [brief description, or "None"]
-TIP: [one short practical tip]`;
+TIP: [one short practical tip]
+
+Be encouraging and concise.`;
 
   try {
-    const result = await callGeminiAudio(base64, mime, prompt);
-    if (!result) return;
-    const heardMatch = result.match(/HEARD:\s*([^\n]+)/);
-    const heard = heardMatch ? heardMatch[1].trim() : '(could not transcribe)';
-    const box = document.getElementById('pronTranscript');
-    box.textContent = heard;
-    box.classList.add('has-text');
-    document.getElementById('pronResult').className = 'ai-result visible';
-    document.getElementById('pronResult').innerHTML = formatPronResult(result);
-    saveRecord('pronunciation', heard, result);
+    const reply = await callGemini(prompt);
+    if (!reply) { box.className = 'ai-result'; return; }
+    box.innerHTML = formatPronResult(reply);
+    saveRecord('pronunciation', pronFinalText, reply);
   } catch(e) {
-    document.getElementById('pronTranscript').textContent = 'Error: ' + e.message;
+    box.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
     showSnack(e.message, true);
   } finally {
-    document.getElementById('pronMicBtn').classList.remove('processing');
-    document.getElementById('pronMicLabel').textContent = 'Tap to speak';
+    btn.disabled = false; btn.textContent = '✏️ Correct my English!';
   }
 }
 
@@ -320,110 +347,87 @@ function formatPronResult(raw) {
   const verdict = get('VERDICT'), corrected = get('CORRECTED'), issues = get('ISSUES'), tip = get('TIP');
   const isGood = verdict.toLowerCase().includes('perfect') || corrected.toLowerCase().includes('no correction');
   return `
-    <div class="label ${isGood?'correct':'improve'}">${isGood?'✓ VERDICT':'⚠ VERDICT'}</div>
+    <div class="lbl ${isGood?'c-green':'c-yellow'}">${isGood?'✓ VERDICT':'⚠ VERDICT'}</div>
     <div>${verdict||'—'}</div>
-    ${corrected && !corrected.toLowerCase().includes('no correction') ? `<div class="label correct" style="margin-top:10px">✓ CORRECTED</div><div class="correct-text">${corrected}</div>` : ''}
-    ${issues && issues!=='None' ? `<div class="label improve" style="margin-top:10px">⚠ ISSUES</div><div>${issues}</div>` : ''}
-    ${tip ? `<div class="label tip-c" style="margin-top:10px">💡 TIP</div><div class="tip-text">${tip}</div>` : ''}`;
+    ${corrected && !corrected.toLowerCase().includes('no correction') ? `<div class="lbl c-green" style="margin-top:10px">✓ CORRECTED</div><div class="correct-text">${corrected}</div>` : ''}
+    ${issues && issues!=='None' ? `<div class="lbl c-yellow" style="margin-top:10px">⚠ ISSUES</div><div>${issues}</div>` : ''}
+    ${tip ? `<div class="lbl c-purple" style="margin-top:10px">💡 TIP</div><div class="tip-text">${tip}</div>` : ''}`;
 }
 
-// ── Conversation ──
-async function toggleConvMic() {
-  if (isConvRecording) { stopConvMic(); } else { await startConvMic(); }
+// ── Conversation mic ──
+function toggleConvMic() {
+  if (isConvRecording) { stopConvMic(); } else { startConvMic(); }
 }
 
-async function startConvMic() {
+function startConvMic() {
   if (isGeminiLoading) { showSnack('AI is replying, please wait.', true); return; }
-  const stream = await getStream();
-  if (!stream) return;
-  convChunks = [];
-  const mime = getBestMimeType();
-  convMediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-  convMediaRecorder.ondataavailable = e => { if (e.data.size > 0) convChunks.push(e.data); };
-  convMediaRecorder.onstop = async () => {
-    stream.getTracks().forEach(t => t.stop());
-    const blob = new Blob(convChunks, { type: convMediaRecorder.mimeType || 'audio/mp4' });
-    await processConvAudio(blob);
-  };
-  convMediaRecorder.start();
+  document.getElementById('convLive').className = 'live-text active';
+  document.getElementById('chatInput').value = '';
+
+  convRecog = buildRecog(
+    interim => {
+      document.getElementById('convLive').textContent = interim || '…';
+      document.getElementById('chatInput').value = interim;
+    },
+    final => { document.getElementById('chatInput').value = final; },
+    () => {
+      isConvRecording = false;
+      document.getElementById('convMicBtn').classList.remove('recording');
+      document.getElementById('convMicBtn').textContent = '🎙️';
+      document.getElementById('convLive').className = 'live-text';
+      const text = document.getElementById('chatInput').value.trim();
+      if (text && !isGeminiLoading) sendMessage();
+    }
+  );
+  if (!convRecog) return;
+  convRecog.start();
   isConvRecording = true;
   document.getElementById('convMicBtn').classList.add('recording');
   document.getElementById('convMicBtn').textContent = '⏹';
 }
 
 function stopConvMic() {
-  if (!convMediaRecorder || !isConvRecording) return;
-  convMediaRecorder.stop();
-  isConvRecording = false;
-  document.getElementById('convMicBtn').classList.remove('recording');
-  document.getElementById('convMicBtn').classList.add('processing');
-  document.getElementById('convMicBtn').textContent = '⌛';
+  if (convRecog) convRecog.stop();
 }
 
-async function processConvAudio(blob) {
-  const base64 = await blobToBase64(blob);
-  const mime = blob.type || 'audio/mp4';
-  try {
-    const transcribed = await callGeminiAudio(base64, mime, 'Transcribe exactly what is said. Reply with ONLY the transcribed text, nothing else.');
-    if (!transcribed || !transcribed.trim()) { showSnack('Could not hear anything. Please try again.', true); return; }
-    document.getElementById('chatInput').value = transcribed.trim();
-    await sendMessage();
-  } catch(e) {
-    showSnack('Error: ' + e.message, true);
-  } finally {
-    document.getElementById('convMicBtn').classList.remove('processing');
-    document.getElementById('convMicBtn').textContent = '🎙️';
-  }
-}
-
-// ── Gemini API ──
+// ── Gemini API (純文字，超省 quota) ──
 async function callGemini(prompt) {
   if (!geminiKey) { showSnack('Please save your Gemini API key first!', true); return null; }
-  if (isGeminiLoading) return null;
+  if (isGeminiLoading) return null;  // 全域鎖：同一時間只允許一個請求
   isGeminiLoading = true;
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 600 } })
-    });
-    if (res.status === 429) throw new Error('Rate limit hit. Wait 30 seconds and try again.');
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 400 }
+        })
+      }
+    );
+    if (res.status === 429) throw new Error('Rate limit hit. Wait 30 sec and try again.');
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error ' + res.status); }
     const data = await res.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  } finally { isGeminiLoading = false; }
-}
-
-async function callGeminiAudio(base64, mime, prompt) {
-  if (!geminiKey) { showSnack('Please save your Gemini API key first!', true); return null; }
-  if (isGeminiLoading) return null;
-  isGeminiLoading = true;
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ inline_data: { mime_type: mime, data: base64 } }, { text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 800 }
-      })
-    });
-    if (res.status === 429) throw new Error('Rate limit hit. Wait 30 seconds and try again.');
-    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error ' + res.status); }
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  } finally { isGeminiLoading = false; }
+  } finally {
+    isGeminiLoading = false;  // 不管成功失敗，一定解鎖
+  }
 }
 
 // ── Chat ──
 function initConversation() {
   chatHistory = [];
   document.getElementById('chatBox').innerHTML = '';
-  addMsg('ai', "Hi! Let's chat in English 😊 I'll naturally correct any mistakes as we go. What would you like to talk about?");
+  addMsg('ai', "Hi! Let's chat in English 😊 I'll naturally correct any mistakes. What would you like to talk about?");
 }
 
 function addMsg(role, text) {
   const box = document.getElementById('chatBox');
   const div = document.createElement('div');
   div.className = 'msg ' + role;
-  div.innerHTML = text.replace(/\n/g, '<br>');
+  div.innerHTML = text.replace(/\n/g,'<br>');
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   return div;
@@ -439,87 +443,93 @@ function addLoadingMsg() {
   return div;
 }
 
-function chatKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function chatKeydown(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
 
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text || isGeminiLoading) return;
+  if (!text || isGeminiLoading) return;  // 全域鎖：AI 在思考時擋掉所有新請求
   input.value = '';
   addMsg('user', text);
-  chatHistory.push({ role: 'user', text });
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
+  chatHistory.push({ role:'user', text });
+  document.getElementById('sendBtn').disabled = true;
   const loading = addLoadingMsg();
+
   const historyStr = chatHistory.slice(-8).map(m => `${m.role==='user'?'Student':'Teacher'}: ${m.text}`).join('\n');
-  const prompt = `You are a friendly English conversation partner and teacher.\n\nConversation so far:\n${historyStr}\n\nIf the student made grammar or vocabulary mistakes, start your reply with "📝 Quick correction: [corrected version]" on its own line. Then respond naturally and ask a follow-up question. Be warm and concise (2-3 sentences).`;
+  const prompt = `You are a friendly English conversation partner and teacher.
+
+Conversation so far:
+${historyStr}
+
+If the student made grammar or vocabulary mistakes, start your reply with "📝 Quick correction: [corrected]" on its own line. Then respond naturally and ask a follow-up question. Be warm and concise (2-3 sentences).`;
+
   try {
     const reply = await callGemini(prompt);
     loading.remove();
     if (!reply) return;
     if (reply.includes('📝 Quick correction:')) {
-      const parts = reply.split(/📝 Quick correction:/i);
-      const correction = parts[1]?.split('\n')[0]?.trim();
-      const response = reply.replace(/📝 Quick correction:[^\n]*/i, '').trim();
-      if (correction) { addMsg('correction', '<strong>📝 Quick correction:</strong> ' + correction); saveRecord('conversation', text, '📝 ' + correction); }
-      if (response) { addMsg('ai', response); chatHistory.push({ role: 'ai', text: response }); }
+      const correction = reply.match(/📝 Quick correction:\s*([^\n]+)/i)?.[1]?.trim();
+      const response = reply.replace(/📝 Quick correction:[^\n]*/i,'').trim();
+      if (correction) { addMsg('correction','<strong>📝 Quick correction:</strong> ' + correction); saveRecord('conversation', text, '📝 ' + correction); }
+      if (response) { addMsg('ai', response); chatHistory.push({ role:'ai', text:response }); }
     } else {
       addMsg('ai', reply);
-      chatHistory.push({ role: 'ai', text: reply });
+      chatHistory.push({ role:'ai', text:reply });
     }
   } catch(e) {
     loading.remove();
-    addMsg('ai', '⚠️ Error: ' + e.message);
+    addMsg('ai','⚠️ Error: ' + e.message);
     showSnack(e.message, true);
-  } finally { sendBtn.disabled = false; }
+  } finally {
+    document.getElementById('sendBtn').disabled = false;
+  }
 }
 
 // ── Records ──
 function saveRecord(type, original, feedback) {
   records.unshift({ type, original, feedback, time: Date.now() });
-  if (records.length > 200) records = records.slice(0, 200);
+  if (records.length > 200) records = records.slice(0,200);
   localStorage.setItem('ecRecords', JSON.stringify(records));
 }
 
 function renderRecords() {
-  const filtered = recordFilter === 'all' ? records : records.filter(r => r.type === recordFilter);
+  const filtered = recordFilter==='all' ? records : records.filter(r=>r.type===recordFilter);
   document.getElementById('statSessions').textContent = records.length;
-  document.getElementById('statErrors').textContent = records.filter(r => !r.feedback.toLowerCase().includes('perfect') && !r.feedback.includes('No correction needed')).length;
-  document.getElementById('statPerfect').textContent = records.filter(r => r.feedback.toLowerCase().includes('perfect') || r.feedback.includes('No correction needed')).length;
+  document.getElementById('statErrors').textContent = records.filter(r=>!r.feedback.toLowerCase().includes('perfect')&&!r.feedback.includes('No correction needed')).length;
+  document.getElementById('statPerfect').textContent = records.filter(r=>r.feedback.toLowerCase().includes('perfect')||r.feedback.includes('No correction needed')).length;
   const list = document.getElementById('recordsList');
-  if (!filtered.length) { list.innerHTML = '<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
-  list.innerHTML = filtered.map(r => `<div class="record-item"><div class="record-meta"><span class="record-type ${r.type}">${r.type==='pronunciation'?'🎤 Pronunciation':'💬 Conversation'}</span><span class="record-time">${timeAgo(r.time)}</span></div><div class="record-original">"${r.original}"</div><div class="record-feedback">${r.feedback.substring(0,200)}${r.feedback.length>200?'…':''}</div></div>`).join('');
+  if (!filtered.length) { list.innerHTML='<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
+  list.innerHTML = filtered.map(r=>`<div class="record-item"><div class="record-meta"><span class="record-type ${r.type}">${r.type==='pronunciation'?'🎤 Pronunciation':'💬 Conversation'}</span><span class="record-time">${timeAgo(r.time)}</span></div><div class="record-original">"${r.original}"</div><div class="record-feedback">${r.feedback.substring(0,200)}${r.feedback.length>200?'…':''}</div></div>`).join('');
 }
 
-function filterRecords(f, btn) {
-  recordFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+function filterRecords(f,btn) {
+  recordFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderRecords();
 }
 
 function clearRecords() {
   if (!confirm('Clear all records?')) return;
-  records = [];
-  localStorage.setItem('ecRecords', JSON.stringify(records));
+  records=[];
+  localStorage.setItem('ecRecords',JSON.stringify(records));
   renderRecords();
 }
 
 function timeAgo(ts) {
-  const d = Date.now() - ts;
-  if (d < 60000) return 'just now';
-  if (d < 3600000) return Math.floor(d/60000) + 'm ago';
-  if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+  const d=Date.now()-ts;
+  if(d<60000) return 'just now';
+  if(d<3600000) return Math.floor(d/60000)+'m ago';
+  if(d<86400000) return Math.floor(d/3600000)+'h ago';
   return new Date(ts).toLocaleDateString();
 }
 
 let snackTimer;
-function showSnack(msg, isErr=false) {
-  const s = document.getElementById('snackbar');
-  s.textContent = msg;
-  s.className = 'show' + (isErr?' err':'');
+function showSnack(msg,isErr=false) {
+  const s=document.getElementById('snackbar');
+  s.textContent=msg; s.className='show'+(isErr?' err':'');
   clearTimeout(snackTimer);
-  snackTimer = setTimeout(() => s.className = '', 3500);
+  snackTimer=setTimeout(()=>s.className='',3500);
 }
 </script>
 </body>
