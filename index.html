@@ -93,10 +93,10 @@ header p{font-size:.8rem;color:var(--text2);margin-top:4px}
 <body>
 <header>
   <h1>🎓 English <span>Coach</span></h1>
-  <p>Powered by Google Gemini · Pure text · Safari ✓</p>
+  <p>Powered by Groq · Free · Safari ✓</p>
 </header>
 <div class="api-bar">
-  <input type="password" id="apiKey" placeholder="Paste your Gemini API key from aistudio.google.com" />
+  <input type="password" id="apiKey" placeholder="Paste your Groq API key (gsk_...)" />
   <button onclick="saveKey()">Save</button>
 </div>
 <div class="api-status" id="apiStatus">No key saved yet</div>
@@ -390,27 +390,29 @@ function stopConvMic() {
   if (convRecog) convRecog.stop();
 }
 
-// ── Gemini API (純文字，超省 quota) ──
+// ── Groq API (純文字，免費，每分鐘30次) ──
 async function callGemini(prompt) {
-  if (!geminiKey) { showSnack('Please save your Gemini API key first!', true); return null; }
+  if (!geminiKey) { showSnack('Please save your Groq API key first!', true); return null; }
   if (isGeminiLoading) return null;  // 全域鎖：同一時間只允許一個請求
   isGeminiLoading = true;
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 400 }
-        })
-      }
-    );
-    if (res.status === 429) throw new Error('Rate limit hit. Wait 30 sec and try again.');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + geminiKey
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 400
+      })
+    });
+    if (res.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error ' + res.status); }
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return data.choices?.[0]?.message?.content || '';
   } finally {
     isGeminiLoading = false;  // 不管成功失敗，一定解鎖
   }
