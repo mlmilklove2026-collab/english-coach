@@ -5,81 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>English Coach 🎓</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&family=Space+Mono&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#f8f7f4;--bg2:#fff;--bg3:#f1efe8;
-    --text:#1a1a1a;--text2:#555;--text3:#999;
-    --border:#e0ddd6;--border2:#ccc;
-    --blue-bg:#e6f1fb;--blue-text:#0c447c;--blue-border:#b5d4f4;
-    --green-bg:#eaf3de;--green-text:#27500a;--green-border:#c0dd97;
-    --red-bg:#fcebeb;--red-text:#a32d2d;--red-border:#f7c1c1;
-    --amber-bg:#faeeda;--amber-text:#633806;--amber-border:#fac775;
-    --radius:8px;--radius-lg:12px;
-  }
-  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-  .app{max-width:680px;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem}
-  h1{font-size:22px;font-weight:600;text-align:center}
-  .sub{font-size:13px;color:var(--text2);text-align:center;margin-top:4px}
-  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem}
-  .lbl{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-  .mode-tabs{display:flex;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:5px}
-  .tab{flex:1;padding:8px;border:none;border-radius:var(--radius);font-family:'Sora',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--text2);transition:.15s}
-  .tab.active{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
-  input[type=text],input[type=password],select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-family:'Sora',sans-serif;font-size:13px;background:var(--bg3);color:var(--text);outline:none;transition:.15s}
-  input:focus,select:focus,textarea:focus{border-color:#888}
-  .row{display:flex;gap:8px;align-items:center}
-  .row input{flex:1}
-  .btn{padding:9px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);font-family:'Sora',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text);transition:.15s;white-space:nowrap}
-  .btn:hover:not(:disabled){background:#e8e6df}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .btn-full{width:100%;padding:12px;font-size:14px}
-  .status{font-size:12px;margin-top:6px;color:var(--text3)}
-  .status.ok{color:#3b6d11}.status.err{color:#a32d2d}
-  .prompt-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:14px;line-height:1.6;color:var(--text)}
-  select{margin-bottom:10px}
-  .mic-area{display:flex;flex-direction:column;align-items:center;gap:10px;padding:1rem 0}
-  .mic-btn{width:72px;height:72px;border-radius:50%;border:2px solid var(--border2);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:28px;transition:.15s}
-  .mic-btn:hover{background:var(--bg3)}
-  .mic-btn.rec{background:#fcebeb;border-color:#e24b4a;animation:pulse 1s infinite}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-  .mic-lbl{font-size:13px;color:var(--text2)}
-  .transcript{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:14px;min-height:52px;color:var(--text);line-height:1.6;font-style:italic}
-  .transcript.empty{color:var(--text3);font-style:normal}
-  .result-box{border-radius:var(--radius);padding:12px;font-size:13px;line-height:1.7;margin-bottom:8px}
-  .result-box.blue{background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue-text)}
-  .result-box.green{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)}
-  .result-box.load{background:var(--bg3);color:var(--text2);text-align:center}
-  .chat-hist{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:4px 0}
-  .msg{max-width:88%;padding:10px 14px;border-radius:var(--radius-lg);font-size:13px;line-height:1.6}
-  .msg.user{align-self:flex-end;background:var(--bg3);border:1px solid var(--border2);color:var(--text)}
-  .msg.ai{align-self:flex-start;background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue-text)}
-  .corr-pill{display:block;margin-top:8px;background:#faece7;border:1px solid #f5c4b3;color:#712b13;border-radius:6px;padding:4px 8px;font-size:11px;font-family:'Space Mono',monospace}
-  .chat-row{display:flex;gap:8px;margin-top:10px}
-  .chat-row input{flex:1}
-
-  /* Records tab */
-  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
-  .stat-card{background:var(--bg3);border-radius:var(--radius);padding:12px;text-align:center}
-  .stat-num{font-size:24px;font-weight:600;color:var(--text)}
-  .stat-lbl{font-size:12px;color:var(--text2);margin-top:2px}
-  .record-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
-  .record-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
-  .record-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-  .record-date{font-size:12px;color:var(--text2)}
-  .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
-  .badge.good{background:var(--green-bg);color:var(--green-text)}
-  .badge.bad{background:var(--red-bg);color:var(--red-text)}
-  .badge.ok{background:var(--amber-bg);color:var(--amber-text)}
-  .record-orig{font-size:13px;color:var(--text2);margin-bottom:4px;font-style:italic}
-  .record-corr{font-size:13px;color:var(--blue-text);font-weight:500}
-  .empty-state{text-align:center;padding:2rem;color:var(--text3);font-size:14px}
-  .del-btn{font-size:11px;padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text3)}
-  .del-btn:hover{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)}
-  .hidden{display:none!important}
-  .filter-row{display:flex;gap:8px;margin-bottom:10px}
-  .filter-row select{margin-bottom:0;flex:1}
-  @media(max-width:500px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f8f7f4;color:#1a1a1a;min-height:100vh}
+.app{max-width:640px;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem}
+h1{font-size:22px;font-weight:600;text-align:center}
+.sub{font-size:13px;color:#555;text-align:center;margin-top:4px}
+.card{background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:1rem 1.25rem}
+.lbl{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.tabs{display:flex;gap:6px;background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:5px}
+.tab{flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:#555;transition:.15s}
+.tab.active{background:#f1efe8;color:#1a1a1a;border:1px solid #ccc}
+input[type=text],input[type=password],select{width:100%;padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:13px;background:#f1efe8;color:#1a1a1a;outline:none}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1}
+.btn{padding:9px 16px;background:#f1efe8;border:1px solid #ccc;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:#1a1a1a;transition:.15s}
+.btn:hover:not(:disabled){background:#e8e6df}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-full{width:100%;padding:12px;font-size:14px;margin-top:.5rem}
+.status{font-size:12px;margin-top:6px;color:#999}
+.status.ok{color:#3b6d11}
+.prompt-box{background:#f1efe8;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:14px;line-height:1.6}
+select{margin-bottom:10px}
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:1.2rem 0}
+.mic-btn{width:72px;height:72px;border-radius:50%;border:2px solid #ccc;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:30px;transition:.15s;user-select:none}
+.mic-btn:hover{background:#f1efe8}
+.mic-btn.rec{background:#fcebeb;border-color:#e24b4a;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.mic-lbl{font-size:13px;color:#555}
+.heard{background:#f1efe8;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:14px;min-height:52px;line-height:1.6;font-style:italic;color:#1a1a1a}
+.heard.empty{color:#999;font-style:normal}
+.box-blue{background:#e6f1fb;border:1px solid #b5d4f4;border-radius:8px;padding:12px;font-size:13px;color:#0c447c;line-height:1.7;margin-bottom:8px}
+.box-green{background:#eaf3de;border:1px solid #c0dd97;border-radius:8px;padding:12px;font-size:13px;color:#27500a;line-height:1.7}
+.box-load{background:#f1efe8;border-radius:8px;padding:12px;font-size:13px;color:#555;text-align:center}
+.chat-hist{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:4px 0}
+.msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.msg.user{align-self:flex-end;background:#f1efe8;border:1px solid #ccc;color:#1a1a1a}
+.msg.ai{align-self:flex-start;background:#e6f1fb;border:1px solid #b5d4f4;color:#0c447c}
+.corr-pill{display:block;margin-top:8px;background:#faece7;border:1px solid #f5c4b3;color:#712b13;border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace}
+.chat-row{display:flex;gap:8px;margin-top:10px}
+.chat-row input{flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.stat-card{background:#f1efe8;border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:26px;font-weight:600}
+.stat-lbl{font-size:12px;color:#555;margin-top:2px}
+.record-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+.rec-item{background:#fff;border:1px solid #e0ddd6;border-radius:8px;padding:12px}
+.rec-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rec-date{font-size:12px;color:#555}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.badge.good{background:#eaf3de;color:#27500a}
+.badge.bad{background:#fcebeb;color:#a32d2d}
+.rec-orig{font-size:13px;color:#555;margin-bottom:4px;font-style:italic}
+.rec-corr{font-size:13px;color:#0c447c;font-weight:500}
+.del-btn{font-size:11px;padding:3px 8px;background:transparent;border:1px solid #e0ddd6;border-radius:20px;cursor:pointer;color:#999}
+.del-btn:hover{background:#fcebeb;color:#a32d2d;border-color:#f7c1c1}
+.empty-state{text-align:center;padding:2rem;color:#999;font-size:14px}
+.filter-row{display:flex;gap:8px;margin-bottom:10px}
+.filter-row select{margin-bottom:0;flex:1}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -98,13 +81,13 @@
     <div class="status" id="keyStatus">Paste your key from aistudio.google.com</div>
   </div>
 
-  <div class="mode-tabs">
+  <div class="tabs">
     <button class="tab active" onclick="setMode('p')" id="tab-p">🎤 Pronunciation</button>
     <button class="tab" onclick="setMode('c')" id="tab-c">💬 Conversation</button>
     <button class="tab" onclick="setMode('r')" id="tab-r">📊 Records</button>
   </div>
 
-  <!-- PRONUNCIATION PANE -->
+  <!-- PRONUNCIATION -->
   <div id="pane-p">
     <div class="card" style="margin-bottom:1rem">
       <div class="lbl">Practice topic</div>
@@ -114,29 +97,29 @@
         <option value="travel">Travel & places</option>
         <option value="food">Food & restaurants</option>
         <option value="daily">Daily routine</option>
-        <option value="free">Free speech — say anything</option>
+        <option value="free">Free speech</option>
       </select>
       <div class="lbl">Try saying this</div>
       <div class="prompt-box" id="promptBox">Hi, my name is ___ and I'm learning English. I work as a ___ and I enjoy ___.</div>
     </div>
     <div class="card" style="margin-bottom:1rem">
-      <div class="mic-area">
-        <button class="mic-btn" id="micBtn" onclick="toggleRec()">🎙️</button>
+      <div class="mic-wrap">
+        <div class="mic-btn" id="micBtn" onclick="toggleRec()">🎙️</div>
         <span class="mic-lbl" id="micLbl">Tap to speak</span>
       </div>
       <div class="lbl">What I heard</div>
-      <div class="transcript empty" id="transcriptBox">Your speech will appear here...</div>
+      <div class="heard empty" id="heardBox">Your speech will appear here...</div>
     </div>
     <button class="btn btn-full" id="correctBtn" onclick="correctMe()" disabled>✏️ Correct my English!</button>
     <div id="resultArea" style="margin-top:1rem"></div>
   </div>
 
-  <!-- CONVERSATION PANE -->
+  <!-- CONVERSATION -->
   <div id="pane-c" class="hidden">
     <div class="card">
       <div class="lbl">Conversation — AI corrects mistakes naturally</div>
       <div class="chat-hist" id="chatHist">
-        <div class="msg ai">Hi! Let's chat in English. I'll gently correct any mistakes. What would you like to talk about today? 😊</div>
+        <div class="msg ai">Hi! Let's chat in English. I'll gently correct any mistakes. What would you like to talk about? 😊</div>
       </div>
       <div class="chat-row">
         <input type="text" id="chatInput" placeholder="Type or use mic..." onkeydown="if(event.key==='Enter')sendChat()" />
@@ -144,17 +127,17 @@
       </div>
     </div>
     <div class="card" style="margin-top:1rem">
-      <div class="mic-area" style="padding:.5rem 0 .25rem">
-        <button class="mic-btn" id="micBtn2" onclick="toggleRec2()">🎙️</button>
+      <div class="mic-wrap" style="padding:.5rem 0 .25rem">
+        <div class="mic-btn" id="micBtn2" onclick="toggleRec2()">🎙️</div>
         <span class="mic-lbl" id="micLbl2">Tap to speak</span>
       </div>
     </div>
   </div>
 
-  <!-- RECORDS PANE -->
+  <!-- RECORDS -->
   <div id="pane-r" class="hidden">
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total sessions</div></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Sessions</div></div>
       <div class="stat-card"><div class="stat-num" id="statErrors">0</div><div class="stat-lbl">Errors found</div></div>
       <div class="stat-card"><div class="stat-num" id="statPerfect">0</div><div class="stat-lbl">Perfect ✓</div></div>
     </div>
@@ -165,7 +148,7 @@
           <option value="pronunciation">🎤 Pronunciation</option>
           <option value="conversation">💬 Conversation</option>
         </select>
-        <button class="btn" onclick="clearRecords()" style="white-space:nowrap;color:#a32d2d">🗑 Clear all</button>
+        <button class="btn" onclick="clearAll()" style="color:#a32d2d;white-space:nowrap">🗑 Clear all</button>
       </div>
       <div class="record-list" id="recordList">
         <div class="empty-state">No records yet.<br>Start practising to see your history!</div>
@@ -185,189 +168,215 @@ const PROMPTS = {
 };
 
 let apiKey = localStorage.getItem('ec_key') || '';
-let transcript='',transcript2='';
-let rec=null,rec2=null,isRec=false,isRec2=false;
-let chatMsgs=[];
+let transcript = '', transcript2 = '';
+let rec = null, rec2 = null, isRec = false, isRec2 = false;
+let chatMsgs = [];
 
-if(apiKey){ document.getElementById('apiKey').value=apiKey; setKeyStatus(true); }
-
-function saveKey(){
-  const v=document.getElementById('apiKey').value.trim();
-  if(!v)return;
-  apiKey=v; localStorage.setItem('ec_key',v); setKeyStatus(true);
-}
-function setKeyStatus(ok){
-  const s=document.getElementById('keyStatus');
-  s.textContent=ok?'✓ Key saved':'Enter your Gemini API key';
-  s.className='status '+(ok?'ok':'');
+if (apiKey) {
+  document.getElementById('apiKey').value = apiKey;
+  document.getElementById('keyStatus').textContent = '✓ Key saved';
+  document.getElementById('keyStatus').className = 'status ok';
 }
 
-function setMode(m){
-  ['p','c','r'].forEach(x=>{
-    document.getElementById('pane-'+x).classList.toggle('hidden',x!==m);
-    document.getElementById('tab-'+x).classList.toggle('active',x===m);
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (!v) return;
+  apiKey = v;
+  localStorage.setItem('ec_key', v);
+  document.getElementById('keyStatus').textContent = '✓ Key saved';
+  document.getElementById('keyStatus').className = 'status ok';
+}
+
+function setMode(m) {
+  ['p','c','r'].forEach(x => {
+    document.getElementById('pane-'+x).classList.toggle('hidden', x !== m);
+    document.getElementById('tab-'+x).classList.toggle('active', x === m);
   });
-  if(m==='r') renderRecords();
+  if (m === 'r') renderRecords();
 }
 
-function updatePrompt(){
-  document.getElementById('promptBox').textContent=PROMPTS[document.getElementById('topic').value];
+function updatePrompt() {
+  document.getElementById('promptBox').textContent = PROMPTS[document.getElementById('topic').value];
 }
 
-function mkRec(onR,onE){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('Please use Chrome or Edge for microphone support.');return null;}
-  const r=new SR(); r.continuous=false; r.interimResults=true; r.lang='en-US';
-  r.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;onR(t);};
-  r.onend=onE; r.onerror=()=>onE(); return r;
-}
-
-function toggleRec(){
-  if(isRec){rec&&rec.stop();return;}
-  transcript=''; isRec=true;
-  document.getElementById('micBtn').classList.add('rec');
-  document.getElementById('micLbl').textContent='Listening... (tap to stop)';
-  document.getElementById('transcriptBox').textContent='...';
-  document.getElementById('transcriptBox').classList.remove('empty');
-  rec=mkRec(t=>{
-    transcript=t;
-    document.getElementById('transcriptBox').textContent=t;
-    document.getElementById('correctBtn').disabled=!t.trim();
-  },()=>{
-    isRec=false;
-    document.getElementById('micBtn').classList.remove('rec');
-    document.getElementById('micLbl').textContent='Tap to speak';
-    if(!transcript.trim()){document.getElementById('transcriptBox').textContent='Nothing heard — try again.';document.getElementById('transcriptBox').classList.add('empty');}
-  });
-  rec&&rec.start();
-}
-
-function toggleRec2(){
-  if(isRec2){rec2&&rec2.stop();return;}
-  transcript2=''; isRec2=true;
-  document.getElementById('micBtn2').classList.add('rec');
-  document.getElementById('micLbl2').textContent='Listening... (tap to stop)';
-  rec2=mkRec(t=>{transcript2=t;document.getElementById('chatInput').value=t;},()=>{
-    isRec2=false;
-    document.getElementById('micBtn2').classList.remove('rec');
-    document.getElementById('micLbl2').textContent='Tap to speak';
-    if(transcript2.trim())sendChat();
-  });
-  rec2&&rec2.start();
-}
-
-async function callGemini(prompt){
-  if(!apiKey){alert('Please enter your Gemini API key first.');return null;}
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-  const data=await res.json();
-  if(!res.ok)throw new Error(data.error?.message||'API error');
-  return data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-}
-
-// Records
-function getRecords(){return JSON.parse(localStorage.getItem('ec_records')||'[]');}
-function saveRecord(r){const recs=getRecords();recs.unshift(r);localStorage.setItem('ec_records',JSON.stringify(recs.slice(0,200)));}
-function clearRecords(){if(confirm('Clear all learning records?')){localStorage.removeItem('ec_records');renderRecords();}}
-
-function renderRecords(){
-  const recs=getRecords();
-  const filter=document.getElementById('filterType').value;
-  const filtered=filter==='all'?recs:recs.filter(r=>r.type===filter);
-  const total=recs.length;
-  const errors=recs.filter(r=>r.hasError).length;
-  const perfect=recs.filter(r=>!r.hasError).length;
-  document.getElementById('statTotal').textContent=total;
-  document.getElementById('statErrors').textContent=errors;
-  document.getElementById('statPerfect').textContent=perfect;
-  const list=document.getElementById('recordList');
-  if(!filtered.length){list.innerHTML='<div class="empty-state">No records yet.<br>Start practising to see your history!</div>';return;}
-  list.innerHTML=filtered.map((r,i)=>`
-    <div class="record-item">
-      <div class="record-header">
-        <span class="badge ${r.hasError?'bad':'good'}">${r.type==='pronunciation'?'🎤':'💬'} ${r.hasError?'Had errors':'Perfect'}</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="record-date">${new Date(r.ts).toLocaleString('zh-TW',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-          <button class="del-btn" onclick="delRecord(${i})">✕</button>
-        </div>
-      </div>
-      <div class="record-orig">You: "${r.original}"</div>
-      ${r.corrected&&r.corrected!==r.original?`<div class="record-corr">✏️ ${r.corrected}</div>`:''}
-      ${r.tip?`<div style="font-size:12px;color:#3b6d11;margin-top:4px">💡 ${r.tip}</div>`:''}
-    </div>`).join('');
-}
-
-function delRecord(idx){
-  const filter=document.getElementById('filterType').value;
-  const recs=getRecords();
-  const filtered=filter==='all'?recs:recs.filter(r=>r.type===filter);
-  const target=filtered[idx];
-  const allIdx=recs.findIndex(r=>r.ts===target.ts&&r.original===target.original);
-  if(allIdx>-1){recs.splice(allIdx,1);localStorage.setItem('ec_records',JSON.stringify(recs));renderRecords();}
-}
-
-async function correctMe(){
-  if(!transcript.trim())return;
-  const btn=document.getElementById('correctBtn');
-  btn.disabled=true; btn.textContent='⏳ Analyzing...';
-  const area=document.getElementById('resultArea');
-  area.innerHTML='<div class="result-box load">Asking Gemini to review your English...</div>';
-  try{
-    const prompt=`You are a friendly English teacher. The student said: "${transcript}"
-
-Reply in EXACTLY this format (keep the labels, one line each):
-CORRECTED: [corrected sentence, or repeat original if perfect]
-ERRORS: [briefly what was wrong, or "No errors found." if perfect]
-TIP: [one short tip on pronunciation or word choice]`;
-    const reply=await callGemini(prompt);
-    const lines={};
-    reply.split('\n').forEach(l=>{const[k,...v]=l.split(':');if(k&&v.length)lines[k.trim()]=v.join(':').trim();});
-    const corrected=lines.CORRECTED||transcript;
-    const errors=lines.ERRORS||'';
-    const tip=lines.TIP||'';
-    const hasError=!errors.toLowerCase().includes('no error');
-    area.innerHTML=`
-      <div class="result-box blue"><div class="lbl" style="color:#185fa5">✏️ Correction</div><strong>${corrected}</strong><div style="margin-top:6px;font-size:12px;opacity:.8">${errors}</div></div>
-      ${tip?`<div class="result-box green"><div class="lbl" style="color:#3b6d11">💡 Tip</div>${tip}</div>`:''}`;
-    saveRecord({ts:Date.now(),type:'pronunciation',original:transcript,corrected,tip,hasError});
-  }catch(e){
-    area.innerHTML=`<div class="result-box" style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ${e.message}</div>`;
+function startSpeech(onResult, onEnd) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Speech recognition not supported. Please use Chrome or Edge.');
+    return null;
   }
-  btn.disabled=false; btn.innerHTML='✏️ Correct my English!';
+  const r = new SR();
+  r.continuous = false;
+  r.interimResults = true;
+  r.lang = 'en-US';
+  r.onresult = function(e) {
+    let t = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
+    onResult(t);
+  };
+  r.onend = onEnd;
+  r.onerror = function(e) { console.log('Speech error:', e.error); onEnd(); };
+  r.start();
+  return r;
 }
 
-async function sendChat(){
-  const input=document.getElementById('chatInput');
-  const text=input.value.trim(); if(!text)return;
-  input.value=''; document.getElementById('sendBtn').disabled=true;
-  const hist=document.getElementById('chatHist');
-  const uEl=document.createElement('div'); uEl.className='msg user'; uEl.textContent=text; hist.appendChild(uEl);
-  chatMsgs.push({role:'user',text});
-  const aEl=document.createElement('div'); aEl.className='msg ai'; aEl.textContent='...'; hist.appendChild(aEl);
-  hist.scrollTop=hist.scrollHeight;
-  const history=chatMsgs.map(m=>`${m.role==='user'?'Student':'Teacher'}: ${m.text}`).join('\n');
-  const prompt=`You are a friendly English conversation partner and teacher.
-Have a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.
-If there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.
-Keep replies to 2-3 sentences. Be encouraging.
+function toggleRec() {
+  if (isRec) { if (rec) rec.stop(); return; }
+  transcript = '';
+  isRec = true;
+  document.getElementById('micBtn').classList.add('rec');
+  document.getElementById('micLbl').textContent = 'Listening... (tap to stop)';
+  document.getElementById('heardBox').textContent = '...';
+  document.getElementById('heardBox').classList.remove('empty');
+  rec = startSpeech(
+    function(t) {
+      transcript = t;
+      document.getElementById('heardBox').textContent = t;
+      document.getElementById('correctBtn').disabled = !t.trim();
+    },
+    function() {
+      isRec = false;
+      document.getElementById('micBtn').classList.remove('rec');
+      document.getElementById('micLbl').textContent = 'Tap to speak';
+      if (!transcript.trim()) {
+        document.getElementById('heardBox').textContent = 'Nothing heard — try again.';
+        document.getElementById('heardBox').classList.add('empty');
+      }
+    }
+  );
+}
 
-Conversation so far:
-${history}
+function toggleRec2() {
+  if (isRec2) { if (rec2) rec2.stop(); return; }
+  transcript2 = '';
+  isRec2 = true;
+  document.getElementById('micBtn2').classList.add('rec');
+  document.getElementById('micLbl2').textContent = 'Listening... (tap to stop)';
+  rec2 = startSpeech(
+    function(t) { transcript2 = t; document.getElementById('chatInput').value = t; },
+    function() {
+      isRec2 = false;
+      document.getElementById('micBtn2').classList.remove('rec');
+      document.getElementById('micLbl2').textContent = 'Tap to speak';
+      if (transcript2.trim()) sendChat();
+    }
+  );
+}
 
-Teacher:`;
-  try{
-    const reply=await callGemini(prompt);
-    chatMsgs.push({role:'ai',text:reply});
-    const parts=reply.split('CORRECTION:');
-    aEl.innerHTML=`<span>${parts[0].trim()}</span>`;
-    const corrPart=parts[1]?.trim()||'';
-    if(corrPart){const c=document.createElement('span');c.className='corr-pill';c.textContent='📝 '+corrPart;aEl.appendChild(c);}
-    const hasError=!!corrPart;
-    saveRecord({ts:Date.now(),type:'conversation',original:text,corrected:corrPart||text,tip:'',hasError});
-  }catch(e){aEl.textContent='Error: '+e.message;}
-  hist.scrollTop=hist.scrollHeight;
-  document.getElementById('sendBtn').disabled=false;
+async function callGemini(prompt) {
+  if (!apiKey) { alert('Please enter your Gemini API key first.'); return null; }
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
+  return data.candidates[0].content.parts[0].text;
+}
+
+async function correctMe() {
+  if (!transcript.trim()) return;
+  const btn = document.getElementById('correctBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+  const area = document.getElementById('resultArea');
+  area.innerHTML = '<div class="box-load">Asking Gemini to review your English...</div>';
+  try {
+    const prompt = 'You are a friendly English teacher. The student said: "' + transcript + '"\n\nReply in EXACTLY this format (keep the labels, one line each):\nCORRECTED: [corrected sentence, or repeat original if perfect]\nERRORS: [briefly what was wrong, or "No errors found." if perfect]\nTIP: [one short tip on pronunciation or word choice]';
+    const reply = await callGemini(prompt);
+    const lines = {};
+    reply.split('\n').forEach(function(l) {
+      const idx = l.indexOf(':');
+      if (idx > -1) { const k = l.slice(0,idx).trim(); const v = l.slice(idx+1).trim(); if (k) lines[k] = v; }
+    });
+    const corrected = lines['CORRECTED'] || transcript;
+    const errors = lines['ERRORS'] || '';
+    const tip = lines['TIP'] || '';
+    const hasError = !errors.toLowerCase().includes('no error');
+    area.innerHTML =
+      '<div class="box-blue"><div class="lbl" style="color:#185fa5">✏️ Correction</div><strong>' + corrected + '</strong>' +
+      (errors ? '<div style="margin-top:6px;font-size:12px;opacity:.8">' + errors + '</div>' : '') + '</div>' +
+      (tip ? '<div class="box-green"><div class="lbl" style="color:#3b6d11">💡 Tip</div>' + tip + '</div>' : '');
+    saveRecord({ ts: Date.now(), type: 'pronunciation', original: transcript, corrected: corrected, tip: tip, hasError: hasError });
+  } catch(e) {
+    area.innerHTML = '<div style="background:#fcebeb;border:1px solid #f7c1c1;color:#a32d2d;border-radius:8px;padding:12px;font-size:13px">Error: ' + e.message + '</div>';
+  }
+  btn.disabled = false;
+  btn.textContent = '✏️ Correct my English!';
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+  const hist = document.getElementById('chatHist');
+  const uEl = document.createElement('div');
+  uEl.className = 'msg user';
+  uEl.textContent = text;
+  hist.appendChild(uEl);
+  chatMsgs.push({ role: 'user', text: text });
+  const aEl = document.createElement('div');
+  aEl.className = 'msg ai';
+  aEl.textContent = '...';
+  hist.appendChild(aEl);
+  hist.scrollTop = hist.scrollHeight;
+  const history = chatMsgs.map(function(m) { return (m.role === 'user' ? 'Student' : 'Teacher') + ': ' + m.text; }).join('\n');
+  const prompt = 'You are a friendly English conversation partner and teacher.\nHave a natural, warm conversation. If the student made grammar or vocabulary errors, gently correct them.\nIf there is a correction needed, end your reply with a new line starting exactly with "CORRECTION:" followed by the corrected version.\nKeep replies to 2-3 sentences. Be encouraging.\n\nConversation so far:\n' + history + '\n\nTeacher:';
+  try {
+    const reply = await callGemini(prompt);
+    chatMsgs.push({ role: 'ai', text: reply });
+    const parts = reply.split('CORRECTION:');
+    aEl.innerHTML = '<span>' + parts[0].trim() + '</span>';
+    const corrPart = parts[1] ? parts[1].trim() : '';
+    if (corrPart) { const c = document.createElement('span'); c.className = 'corr-pill'; c.textContent = '📝 ' + corrPart; aEl.appendChild(c); }
+    saveRecord({ ts: Date.now(), type: 'conversation', original: text, corrected: corrPart || text, tip: '', hasError: !!corrPart });
+  } catch(e) {
+    aEl.textContent = 'Error: ' + e.message;
+  }
+  hist.scrollTop = hist.scrollHeight;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function getRecords() { return JSON.parse(localStorage.getItem('ec_records') || '[]'); }
+function saveRecord(r) {
+  const recs = getRecords();
+  recs.unshift(r);
+  localStorage.setItem('ec_records', JSON.stringify(recs.slice(0, 200)));
+}
+function clearAll() {
+  if (confirm('Clear all learning records?')) { localStorage.removeItem('ec_records'); renderRecords(); }
+}
+function renderRecords() {
+  const recs = getRecords();
+  const filter = document.getElementById('filterType').value;
+  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
+  document.getElementById('statTotal').textContent = recs.length;
+  document.getElementById('statErrors').textContent = recs.filter(function(r) { return r.hasError; }).length;
+  document.getElementById('statPerfect').textContent = recs.filter(function(r) { return !r.hasError; }).length;
+  const list = document.getElementById('recordList');
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state">No records yet.<br>Start practising to see your history!</div>'; return; }
+  list.innerHTML = filtered.map(function(r, i) {
+    const d = new Date(r.ts).toLocaleString('zh-TW', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    return '<div class="rec-item">' +
+      '<div class="rec-top"><span class="badge ' + (r.hasError ? 'bad' : 'good') + '">' + (r.type === 'pronunciation' ? '🎤' : '💬') + ' ' + (r.hasError ? 'Had errors' : 'Perfect') + '</span>' +
+      '<div style="display:flex;gap:8px;align-items:center"><span class="rec-date">' + d + '</span><button class="del-btn" onclick="delRecord(' + i + ')">✕</button></div></div>' +
+      '<div class="rec-orig">You: "' + r.original + '"</div>' +
+      (r.corrected && r.corrected !== r.original ? '<div class="rec-corr">✏️ ' + r.corrected + '</div>' : '') +
+      (r.tip ? '<div style="font-size:12px;color:#3b6d11;margin-top:4px">💡 ' + r.tip + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+function delRecord(idx) {
+  const filter = document.getElementById('filterType').value;
+  const recs = getRecords();
+  const filtered = filter === 'all' ? recs : recs.filter(function(r) { return r.type === filter; });
+  const target = filtered[idx];
+  const allIdx = recs.findIndex(function(r) { return r.ts === target.ts && r.original === target.original; });
+  if (allIdx > -1) { recs.splice(allIdx, 1); localStorage.setItem('ec_records', JSON.stringify(recs)); renderRecords(); }
 }
 </script>
 </body>
